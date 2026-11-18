@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import type { Coleccion, DB, Empresa, ID } from '../types'
-import { supabase, BUCKET } from '../lib/supabase'
+import { supabase, BUCKET, guardarEmpresasConocidas } from '../lib/supabase'
 import { crearDBDemo, crearDBVacia } from './seed'
 import { uid } from '../lib/utils'
 import { Login, SinAcceso, Cargando, Bienvenida } from '../components/Acceso'
@@ -159,6 +159,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       .then(() => setSync('ok'))
       .catch((e) => { console.error(e); setSync('error') })
   }, [db])
+
+  // Recuerda las empresas en este equipo para el selector de la pantalla de acceso
+  const empresasDb = db?.empresas
+  useEffect(() => {
+    if (empresasDb?.length) guardarEmpresasConocidas(empresasDb.map((e) => ({ id: e.id, nombre: e.nombre })))
+  }, [empresasDb])
 
   // Cambios hechos por otros usuarios (tiempo real)
   useEffect(() => {
