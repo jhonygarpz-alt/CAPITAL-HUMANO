@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Users, UserPlus, Palmtree, AlertTriangle, Plus, FileWarning, Cake, ArrowRight, FolderOpen } from 'lucide-react'
+import { Users, UserPlus, Palmtree, CalendarDays, CalendarX, Plus, FileWarning, Cake, ArrowRight, FolderOpen } from 'lucide-react'
 import { useStore } from '../store/Store'
-import { Avatar, Badge, Empty, PageHeader, StatCard, Table, Tabs } from '../components/ui'
+import { Avatar, Badge, Empty, PageHeader, StatCard, Table, Tabs, cx } from '../components/ui'
 import { ColaboradorForm } from '../components/ColaboradorForm'
-import { PanelColaborador } from './Colaboradores'
+import { AccionesFila, PanelColaborador } from './Colaboradores'
 import { porcentajeExpediente } from '../components/Documentos'
 import { addDays, diffDays, estadoContrato, fmtFecha, hoy, nombreCompleto, parseISO } from '../lib/utils'
 
@@ -20,9 +20,7 @@ export default function Inicio() {
   const t = hoy()
   const inicioMes = t.slice(0, 8) + '01'
   const altasMes = cols.filter((c) => c.fechaIngreso >= inicioMes).length
-  const vacs = deEmpresa('vacaciones')
-  const enVacaciones = vacs.filter((v) => v.estatus === 'Aprobada' && v.fechaInicio <= t && v.fechaFin >= t).length
-  const vacPend = vacs.filter((v) => v.estatus === 'Pendiente').length
+  const vacantes = deEmpresa('vacantes').filter((v) => v.estatus === 'Abierta' || v.estatus === 'En proceso').reduce((s, v) => s + v.posiciones, 0)
   const incPend = deEmpresa('incidencias').filter((i) => i.estatus === 'Pendiente').length
   const contratos = deEmpresa('contratos')
   const porVencer = contratos.filter((k) => ['Por vencer', 'Vencido'].includes(estadoContrato(k)))
@@ -38,25 +36,29 @@ export default function Inicio() {
       <PageHeader title="Administración de Personal" subtitle={`Resumen de ${empresa.nombre}`}
         actions={<button className="btn-primary" onClick={() => setNuevo(true)}><Plus size={16} /> Nuevo colaborador</button>} />
 
-      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon={<Users size={20} />} value={activos.length} label="Colaboradores activos" onClick={() => nav('/colaboradores')} />
-        <StatCard icon={<UserPlus size={20} />} value={altasMes} label="Altas del mes" tono="green" onClick={() => nav('/reportes')} />
-        <StatCard icon={<Palmtree size={20} />} value={enVacaciones} label={`De vacaciones hoy · ${vacPend} por aprobar`} tono="blue" onClick={() => nav('/vacaciones')} />
-        <StatCard icon={<AlertTriangle size={20} />} value={incPend} label="Incidencias pendientes" tono="red" onClick={() => nav('/incidencias')} />
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
+      <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="space-y-6">
-          <div className="card overflow-hidden">
-            <div className="px-4 pt-2"><Tabs value={tab} onChange={setTab} tabs={[{ id: 'colaboradores', label: 'Colaboradores' }, { id: 'contratos', label: 'Contratos' }, { id: 'documentos', label: 'Documentos' }]} /></div>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatCard icon={<Users size={22} />} value={activos.length} label="Colaboradores" tono="blue" onClick={() => nav('/colaboradores')} />
+            <StatCard icon={<UserPlus size={22} />} value={altasMes} label="Altas del mes" tono="green" onClick={() => nav('/reportes')} />
+            <StatCard icon={<CalendarDays size={22} />} value={vacantes} label="Vacantes" tono="violet" onClick={() => nav('/vacantes')} />
+            <StatCard icon={<CalendarX size={22} />} value={incPend} label="Incidencias" tono="red" onClick={() => nav('/incidencias')} />
+          </div>
+
+          <div>
+            <Tabs value={tab} onChange={setTab} tabs={[{ id: 'colaboradores', label: 'Colaboradores' }, { id: 'contratos', label: 'Contratos' }, { id: 'documentos', label: 'Documentos' }]} />
+          </div>
+          <div className="card-glow overflow-hidden">
             {tab === 'colaboradores' && (recientes.length === 0 ? <Empty title="Aún no hay colaboradores" action={<button className="btn-primary" onClick={() => setNuevo(true)}>Registrar el primero</button>} /> : (
-              <Table head={<><th className="th">Colaborador</th><th className="th">Puesto</th><th className="th hidden md:table-cell">Expediente</th><th className="th">Estatus</th></>}>
+              <Table head={<><th className="th">Colaborador</th><th className="th">Puesto</th><th className="th hidden md:table-cell">Empresa</th><th className="th hidden 2xl:table-cell">Expediente</th><th className="th">Estatus</th><th className="th" /></>}>
                 {recientes.slice(0, 8).map((c) => (
-                  <tr key={c.id} className="cursor-pointer hover:bg-slate-50" onClick={() => setSel(c.id)} onDoubleClick={() => nav(`/colaboradores/${c.id}`)}>
-                    <td className="td"><div className="flex items-center gap-3"><Avatar c={c} size={30} /><span className="font-medium">{nombreCompleto(c)}</span></div></td>
+                  <tr key={c.id} className={cx('cursor-pointer transition hover:bg-white/60', seleccionado?.id === c.id && 'bg-primary-50/70')} onClick={() => setSel(c.id)} onDoubleClick={() => nav(`/colaboradores/${c.id}`)}>
+                    <td className="td"><div className="flex items-center gap-3"><Avatar c={c} size={38} /><span className="font-semibold text-slate-900">{nombreCompleto(c)}</span></div></td>
                     <td className="td">{c.puesto}</td>
-                    <td className="td hidden md:table-cell">{porcentajeExpediente(db.documentos, c.id)}%</td>
+                    <td className="td hidden md:table-cell">{empresa.nombre}</td>
+                    <td className="td hidden 2xl:table-cell">{porcentajeExpediente(db.documentos, c.id)}%</td>
                     <td className="td"><Badge>{c.estatus}</Badge></td>
+                    <td className="td text-right"><AccionesFila c={c} /></td>
                   </tr>
                 ))}
               </Table>
@@ -74,7 +76,7 @@ export default function Inicio() {
                 {docsRecientes.map((d) => { const c = colMap.get(d.colaboradorId); return <tr key={d.id}><td className="td font-medium">{d.tipo}</td><td className="td">{c ? nombreCompleto(c) : '—'}</td><td className="td text-slate-500">{fmtFecha(d.fecha)}</td></tr> })}
               </Table>
             ))}
-            <div className="border-t border-slate-100 px-4 py-3 text-right">
+            <div className="border-t border-primary-100 px-4 py-3 text-right">
               <Link to={`/${tab === 'documentos' ? 'expedientes' : tab}`} className="inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:underline">Ver todo <ArrowRight size={14} /></Link>
             </div>
           </div>

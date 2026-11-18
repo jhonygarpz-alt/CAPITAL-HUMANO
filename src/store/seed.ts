@@ -115,10 +115,22 @@ export function crearDBDemo(): DB {
     })
   }
 
+  const vac = (empresaId: string, puesto: string, departamento: string, posiciones: number, salarioOfrecido: number, dias: number, estatus: 'Abierta' | 'En proceso', candidatos: number) =>
+    ({ id: uid(), empresaId, puesto, departamento, posiciones, salarioOfrecido, fechaApertura: addDays(t, -dias), responsable: 'Recursos Humanos', descripcion: '', estatus, candidatos })
+  const vacantes = [
+    vac('emp-a', 'Ejecutivo de Ventas', 'Ventas', 3, 550, 12, 'Abierta', 8),
+    vac('emp-a', 'Desarrollador Frontend', 'Tecnología', 2, 1200, 20, 'En proceso', 5),
+    vac('emp-a', 'Auxiliar Contable', 'Finanzas', 1, 480, 5, 'Abierta', 2),
+    vac('emp-a', 'Analista de Nómina', 'Recursos Humanos', 1, 700, 3, 'Abierta', 0),
+    vac('emp-a', 'Supervisor de Operaciones', 'Operaciones', 1, 900, 30, 'En proceso', 4),
+    vac('emp-b', 'Operador de Producción', 'Producción', 6, 380, 8, 'Abierta', 11),
+    vac('emp-c', 'Asistente Jurídico', 'Jurídico', 1, 650, 15, 'Abierta', 3),
+  ]
+
   return {
     version: 1,
     empresaActualId: 'emp-a',
-    empresas, colaboradores, documentos, contratos, vacaciones, asistencias, incidencias,
+    empresas, colaboradores, documentos, contratos, vacaciones, vacantes, asistencias, incidencias,
     nominas: [],
     eventos: colaboradores.map((c) => ({ id: uid(), empresaId: c.empresaId, colaboradorId: c.id, fecha: c.fechaIngreso + 'T09:00', modulo: 'Colaboradores', accion: `Alta de ${c.nombre} ${c.apellidoPaterno} como ${c.puesto}` })),
   }
@@ -128,6 +140,6 @@ export function crearDBVacia(): DB {
   return {
     version: 1, empresaActualId: 'emp-1',
     empresas: [{ id: 'emp-1', nombre: 'Mi empresa', razonSocial: '', rfc: '', registroPatronal: '', direccion: '', color: '#5b2ff5', departamentos: ['Recursos Humanos', 'Administración'], periodicidadNomina: 'Quincenal' }],
-    colaboradores: [], documentos: [], contratos: [], vacaciones: [], asistencias: [], incidencias: [], nominas: [], eventos: [],
+    colaboradores: [], documentos: [], contratos: [], vacaciones: [], vacantes: [], asistencias: [], incidencias: [], nominas: [], eventos: [],
   }
 }

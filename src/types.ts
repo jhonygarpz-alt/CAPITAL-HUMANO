@@ -63,7 +63,10 @@ export interface Documento {
   colaboradorId: ID
   tipo: string
   nombre: string
+  /** Contenido embebido (versiones antiguas / datos de demostración). */
   archivo?: string
+  /** Ruta del archivo en Supabase Storage. */
+  ruta?: string
   mime?: string
   tamano?: number
   fecha: string
@@ -101,6 +104,20 @@ export interface Vacacion {
 }
 
 export type TipoAsistencia = 'Asistencia' | 'Retardo' | 'Falta' | 'Permiso' | 'Home office'
+
+export interface Vacante {
+  id: ID
+  empresaId: ID
+  puesto: string
+  departamento: string
+  posiciones: number
+  salarioOfrecido: number
+  fechaApertura: string
+  responsable: string
+  descripcion: string
+  estatus: 'Abierta' | 'En proceso' | 'Cubierta' | 'Cancelada'
+  candidatos: number
+}
 
 export interface Asistencia {
   id: ID
@@ -183,6 +200,7 @@ export interface DB {
   documentos: Documento[]
   contratos: Contrato[]
   vacaciones: Vacacion[]
+  vacantes: Vacante[]
   asistencias: Asistencia[]
   incidencias: Incidencia[]
   nominas: PeriodoNomina[]

@@ -10,6 +10,7 @@ import Nomina, { NominaDetalle } from './pages/Nomina'
 import Asistencias from './pages/Asistencias'
 import Vacaciones from './pages/Vacaciones'
 import Incidencias from './pages/Incidencias'
+import Vacantes from './pages/Vacantes'
 import Reportes from './pages/Reportes'
 import Configuracion from './pages/Configuracion'
 import Ayuda from './pages/Ayuda'
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="asistencias" element={<Asistencias />} />
             <Route path="vacaciones" element={<Vacaciones />} />
             <Route path="incidencias" element={<Incidencias />} />
+            <Route path="vacantes" element={<Vacantes />} />
             <Route path="reportes" element={<Reportes />} />
             <Route path="configuracion" element={<Configuracion />} />
             <Route path="ayuda" element={<Ayuda />} />

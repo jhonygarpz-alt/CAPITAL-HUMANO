@@ -18,42 +18,45 @@ Sistema web para administrar los procesos de **Recursos Humanos de varias empres
 | **Configuración** | Alta de empresas (razón social, RFC, registro patronal, departamentos, periodicidad de nómina), respaldo y restauración de información. |
 | **Ayuda** | Guía rápida en 8 pasos. |
 
-Además: buscador global de colaboradores, campana de pendientes, historial de movimientos por colaborador y diseño adaptable a celular.
+Además: **Vacantes** (reclutamiento), buscador global de colaboradores, campana de pendientes, historial de movimientos por colaborador, menú lateral compacto y diseño adaptable a celular.
 
-## Cómo ejecutarlo
+## Todo en la web (sin instalar nada)
 
-Requiere Node.js 18 o superior.
+- **Datos y archivos:** Supabase, proyecto `capital-humano` (organización Soluciones Óptima). Tabla `rh_registros` + bucket privado `rh-archivos`, protegidos con RLS. Esquema en `supabase/migrations/`.
+- **Aplicación:** Vercel, conectado a este repositorio de GitHub. Cada cambio que se sube se publica solo.
+- **Usuarios:** inicio de sesión con correo y contraseña (Supabase Auth). El **primer usuario que crea su cuenta queda como administrador**; él invita a los demás desde *Configuración → Usuarios*.
+- **Tiempo real:** si varias personas trabajan a la vez, ven los cambios de los demás al instante.
 
-```bash
-npm install
-npm run dev        # modo desarrollo en http://localhost:5173
-npm run build      # genera la versión para publicar en dist/
-npm run preview    # prueba la versión publicada
-```
+### Publicar en Vercel (una sola vez)
 
-La carpeta `dist/` puede publicarse en cualquier hosting estático (Netlify, Vercel, GitHub Pages, Render, un servidor propio, etc.).
+1. Entra a vercel.com → **Add New… → Project** → importa el repositorio `CAPITAL-HUMANO`.
+2. Vercel detecta Vite automáticamente (`vercel.json`). No hace falta configurar variables: la app ya apunta al proyecto de Supabase.
+3. Pulsa **Deploy** y abre la liga que te da Vercel.
+
+### Configurar Supabase para la liga de Vercel (una sola vez)
+
+En Supabase → proyecto `capital-humano` → **Authentication → URL Configuration**:
+- **Site URL:** la liga de Vercel (ej. `https://capital-humano.vercel.app`).
+- **Redirect URLs:** agrega la misma liga.
+
+Así los correos de confirmación y de "olvidé mi contraseña" regresan a tu sistema.
 
 ## Datos
 
-- La primera vez se cargan **datos de demostración** (3 empresas y 20 colaboradores). Desde *Configuración* puedes "Empezar desde cero".
-- La información se guarda en el navegador (IndexedDB). Usa **Configuración → Descargar respaldo** con regularidad; el respaldo (JSON) se puede restaurar en otra computadora.
+- La base inicia vacía; el administrador elige "Empezar con mi empresa" o "Cargar datos de demostración".
+- En *Configuración → Respaldo* se puede descargar una copia (JSON) y restaurarla.
 - Los cálculos de ISR e IMSS son estimaciones de referencia; valídalos con tu contador antes de timbrar CFDI.
 
 ## Tecnología
 
-React 18 + TypeScript + Vite + Tailwind CSS + React Router + Lucide icons.
-
-Estructura:
+React 18 + TypeScript + Vite + Tailwind CSS + React Router + Lucide icons + Supabase (Postgres, Auth, Storage, Realtime).
 
 ```
 src/
-  types.ts            Modelo de datos (empresas, colaboradores, documentos, contratos…)
-  store/              Estado global, persistencia (IndexedDB) y datos de demostración
-  lib/                Utilidades: fechas, moneda, vacaciones LFT, ISR/IMSS, nómina, CSV
-  components/         Componentes reutilizables (layout, formularios, tablas, modales)
+  types.ts            Modelo de datos (empresas, colaboradores, documentos, contratos, vacantes…)
+  store/              Estado global sincronizado con Supabase y datos de demostración
+  lib/                Supabase, fechas, moneda, vacaciones LFT, ISR/IMSS, nómina, CSV
+  components/         Componentes reutilizables (layout, acceso, formularios, tablas, modales)
   pages/              Una página por módulo
+supabase/migrations/  Esquema de base de datos, seguridad (RLS) y almacenamiento
 ```
-
-### Siguiente paso sugerido
-
-Para uso con varios usuarios simultáneos, conectar la capa `src/store` a una base de datos en la nube (p. ej. Supabase/PostgreSQL) con inicio de sesión y permisos por empresa.

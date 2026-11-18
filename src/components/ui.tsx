@@ -11,8 +11,8 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-[32px] sm:leading-tight">{title}</h1>
+        {subtitle && <p className="mt-1 text-sm text-slate-600">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
@@ -20,22 +20,22 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
 }
 
 const TONOS = {
-  violet: 'bg-primary-50 text-primary-600',
-  green: 'bg-emerald-50 text-emerald-600',
-  blue: 'bg-sky-50 text-sky-600',
-  red: 'bg-rose-50 text-rose-600',
-  amber: 'bg-amber-50 text-amber-600',
-  slate: 'bg-slate-100 text-slate-600',
+  violet: 'bg-gradient-to-br from-violet-100 to-primary-200 text-primary-700',
+  green: 'bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600',
+  blue: 'bg-gradient-to-br from-sky-100 to-blue-200 text-blue-600',
+  red: 'bg-gradient-to-br from-rose-100 to-rose-200 text-rose-600',
+  amber: 'bg-gradient-to-br from-amber-100 to-amber-200 text-amber-600',
+  slate: 'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600',
 }
 export type Tono = keyof typeof TONOS
 
 export function StatCard({ icon, value, label, tono = 'violet', onClick }: { icon: ReactNode; value: ReactNode; label: string; tono?: Tono; onClick?: () => void }) {
   return (
-    <button type="button" onClick={onClick} disabled={!onClick} className="card flex items-center gap-4 p-4 text-left transition enabled:hover:border-primary-200 enabled:hover:shadow-md disabled:cursor-default">
-      <div className={cx('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl', TONOS[tono])}>{icon}</div>
+    <button type="button" onClick={onClick} disabled={!onClick} className="card-glow flex flex-col items-start gap-2 p-4 text-left transition enabled:hover:-translate-y-0.5 enabled:hover:border-primary-400 disabled:cursor-default sm:p-5">
+      <div className={cx('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ring-white', TONOS[tono])}>{icon}</div>
       <div className="min-w-0">
-        <div className="text-2xl font-bold leading-tight text-slate-900">{value}</div>
-        <div className="text-xs leading-tight text-slate-500">{label}</div>
+        <div className="truncate text-2xl font-bold leading-tight text-slate-900 sm:text-[28px]">{value}</div>
+        <div className="text-sm leading-tight text-slate-700 sm:text-base">{label}</div>
       </div>
     </button>
   )
@@ -62,23 +62,29 @@ const BADGES: Record<string, string> = {
   Rechazada: 'bg-rose-50 text-rose-700 ring-rose-600/20',
   Falta: 'bg-rose-50 text-rose-700 ring-rose-600/20',
   Incompleto: 'bg-rose-50 text-rose-700 ring-rose-600/20',
+  Abierta: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
+  'En proceso': 'bg-sky-50 text-sky-700 ring-sky-600/20',
+  Cubierta: 'bg-primary-50 text-primary-700 ring-primary-600/20',
+  Cancelada: 'bg-slate-100 text-slate-600 ring-slate-500/20',
 }
+const PUNTO: Record<string, string> = { Activo: 'bg-emerald-500', Vigente: 'bg-emerald-500', Aprobada: 'bg-emerald-500', Abierta: 'bg-emerald-500' }
 export function Badge({ children, className }: { children: string; className?: string }) {
   return (
-    <span className={cx('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset', BADGES[children] ?? 'bg-primary-50 text-primary-700 ring-primary-600/20', className)}>
-      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
+    <span className={cx('inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset', BADGES[children] ?? 'bg-primary-50 text-primary-700 ring-primary-600/20', className)}>
+      <span className={cx('h-2 w-2 rounded-full', PUNTO[children] ?? 'bg-current opacity-70')} />
       {children}
     </span>
   )
 }
 
 const AV_COLORES = ['bg-primary-100 text-primary-700', 'bg-sky-100 text-sky-700', 'bg-emerald-100 text-emerald-700', 'bg-amber-100 text-amber-700', 'bg-rose-100 text-rose-700', 'bg-indigo-100 text-indigo-700']
-export function Avatar({ c, size = 36 }: { c: Pick<Colaborador, 'nombre' | 'apellidoPaterno' | 'foto' | 'id'>; size?: number }) {
+export function Avatar({ c, size = 36, cuadrado }: { c: Pick<Colaborador, 'nombre' | 'apellidoPaterno' | 'foto' | 'id'>; size?: number; cuadrado?: boolean }) {
   const color = AV_COLORES[(c.id.charCodeAt(0) + c.id.charCodeAt(1)) % AV_COLORES.length]
+  const forma = cuadrado ? 'rounded-2xl shadow-md ring-4' : 'rounded-full ring-2'
   return c.foto ? (
-    <img src={c.foto} alt="" className="shrink-0 rounded-full object-cover ring-2 ring-white" style={{ width: size, height: size }} />
+    <img src={c.foto} alt="" className={cx('shrink-0 object-cover ring-white', forma)} style={{ width: size, height: size }} />
   ) : (
-    <div className={cx('flex shrink-0 items-center justify-center rounded-full font-semibold ring-2 ring-white', color)} style={{ width: size, height: size, fontSize: size * 0.38 }}>
+    <div className={cx('flex shrink-0 items-center justify-center font-semibold ring-white', forma, color)} style={{ width: size, height: size, fontSize: size * 0.36 }}>
       {iniciales(c)}
     </div>
   )
@@ -94,8 +100,8 @@ export function Modal({ open, onClose, title, children, footer, wide }: { open: 
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={onClose}>
-      <div className={cx('flex max-h-[92vh] w-full flex-col rounded-t-2xl bg-white shadow-xl sm:rounded-2xl', wide ? 'sm:max-w-3xl' : 'sm:max-w-lg')} onMouseDown={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+      <div className={cx('flex max-h-[92vh] w-full flex-col rounded-t-2xl border border-primary-200 bg-white/95 shadow-2xl backdrop-blur-xl sm:rounded-2xl', wide ? 'sm:max-w-3xl' : 'sm:max-w-lg')} onMouseDown={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-primary-100 px-5 py-4">
           <h2 className="text-base font-semibold text-slate-900">{title}</h2>
           <button className="btn-ghost" onClick={onClose} aria-label="Cerrar"><X size={18} /></button>
         </div>
@@ -132,11 +138,12 @@ export function Empty({ title, text, action }: { title: string; text?: string; a
 
 export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: T; label: string; count?: number }[]; value: T; onChange: (t: T) => void }) {
   return (
-    <div className="flex gap-1 overflow-x-auto border-b border-slate-200">
+    <div className="flex gap-2 overflow-x-auto border-b border-primary-200/80">
       {tabs.map((t) => (
-        <button key={t.id} onClick={() => onChange(t.id)} className={cx('-mb-px whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition', value === t.id ? 'border-primary-600 text-primary-700' : 'border-transparent text-slate-500 hover:text-slate-700')}>
+        <button key={t.id} onClick={() => onChange(t.id)} className={cx('relative whitespace-nowrap px-4 pb-3 pt-2.5 text-[15px] font-medium transition', value === t.id ? 'text-primary-700' : 'text-slate-700 hover:text-slate-900')}>
           {t.label}
-          {t.count !== undefined && <span className={cx('ml-1.5 rounded-full px-1.5 py-0.5 text-xs', value === t.id ? 'bg-primary-50' : 'bg-slate-100')}>{t.count}</span>}
+          {t.count !== undefined && <span className={cx('ml-1.5 rounded-full px-1.5 py-0.5 text-xs', value === t.id ? 'bg-primary-100' : 'bg-slate-100')}>{t.count}</span>}
+          {value === t.id && <span className="absolute inset-x-1 bottom-0 h-1 rounded-full bg-gradient-to-r from-violet-500 to-primary-600 shadow-[0_0_8px_rgba(124,58,237,.6)]" />}
         </button>
       ))}
     </div>
@@ -146,9 +153,9 @@ export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: 
 export function Table({ head, children }: { head: ReactNode; children: ReactNode }) {
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-slate-100">
-        <thead className="bg-slate-50/60"><tr>{head}</tr></thead>
-        <tbody className="divide-y divide-slate-100">{children}</tbody>
+      <table className="min-w-full divide-y divide-primary-100">
+        <thead className="bg-white/40"><tr>{head}</tr></thead>
+        <tbody className="divide-y divide-primary-100/70">{children}</tbody>
       </table>
     </div>
   )

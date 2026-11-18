@@ -1,13 +1,88 @@
-import { useState, type FormEvent } from 'react'
-import { Building2, Download, Plus, RotateCcw, Trash2, Upload, X } from 'lucide-react'
-import { useStore } from '../store/Store'
-import { Field, Input, Modal, PageHeader, Select, confirmar } from '../components/ui'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { Building2, Download, Mail, Plus, RotateCcw, Shield, Trash2, Upload, UserPlus, X } from 'lucide-react'
+import { useStore, type Miembro } from '../store/Store'
+import { Badge, Field, Input, Modal, PageHeader, Select, confirmar } from '../components/ui'
 import type { DB, Empresa } from '../types'
 import { descargarArchivo, hoy, uid } from '../lib/utils'
 import { crearDBDemo, crearDBVacia } from '../store/seed'
+import { supabase } from '../lib/supabase'
+
+function Usuarios() {
+  const { usuario } = useStore()
+  const esAdmin = usuario.rol === 'admin'
+  const [miembros, setMiembros] = useState<Miembro[]>([])
+  const [invitaciones, setInvitaciones] = useState<{ email: string; rol: string }[]>([])
+  const [email, setEmail] = useState('')
+  const [rol, setRol] = useState('usuario')
+  const [error, setError] = useState('')
+
+  const cargar = useCallback(async () => {
+    const { data } = await supabase.from('rh_miembros').select('user_id,email,nombre,rol').order('created_at')
+    setMiembros((data as Miembro[]) ?? [])
+    if (esAdmin) {
+      const { data: inv } = await supabase.from('rh_invitaciones').select('email,rol').order('created_at')
+      setInvitaciones(inv ?? [])
+    }
+  }, [esAdmin])
+  useEffect(() => { cargar() }, [cargar])
+
+  const invitar = async (e: FormEvent) => {
+    e.preventDefault()
+    setError('')
+    const correo = email.trim().toLowerCase()
+    if (miembros.some((m) => m.email.toLowerCase() === correo)) return setError('Ese correo ya tiene acceso.')
+    const { error: err } = await supabase.from('rh_invitaciones').insert({ email: correo, rol })
+    if (err) return setError(err.code === '23505' ? 'Ese correo ya está invitado.' : err.message)
+    setEmail('')
+    cargar()
+  }
+  const accion = async (p: PromiseLike<{ error: { message: string } | null }>) => {
+    const { error: err } = await p
+    if (err) alert(err.message)
+    cargar()
+  }
+
+  return (
+    <section className="card">
+      <div className="border-b border-primary-100 px-5 py-4">
+        <h2 className="font-semibold">Usuarios</h2>
+        <p className="text-sm text-slate-500">Personas que pueden entrar al sistema. Para dar acceso a alguien, invita su correo; después esa persona entra a la página y pulsa "Crear cuenta" con ese mismo correo.</p>
+      </div>
+      <div className="divide-y divide-primary-100/70">
+        {miembros.map((m) => (
+          <div key={m.user_id} className="flex flex-wrap items-center gap-3 px-5 py-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-slate-600 to-slate-800 text-xs font-semibold text-white">{m.email.slice(0, 2).toUpperCase()}</div>
+            <div className="min-w-0 flex-1"><div className="truncate text-sm font-medium">{m.email}{m.user_id === usuario.user_id && <span className="text-slate-400"> (tú)</span>}</div></div>
+            <Badge>{m.rol === 'admin' ? 'Administrador' : 'Usuario'}</Badge>
+            {esAdmin && m.user_id !== usuario.user_id && <>
+              <button className="btn-ghost text-xs" title="Cambiar rol" onClick={() => accion(supabase.from('rh_miembros').update({ rol: m.rol === 'admin' ? 'usuario' : 'admin' }).eq('user_id', m.user_id))}><Shield size={14} /> {m.rol === 'admin' ? 'Quitar admin' : 'Hacer admin'}</button>
+              <button className="btn-ghost text-rose-600" title="Quitar acceso" onClick={() => confirmar(`¿Quitar el acceso a ${m.email}?`) && accion(supabase.from('rh_miembros').delete().eq('user_id', m.user_id))}><Trash2 size={16} /></button>
+            </>}
+          </div>
+        ))}
+        {invitaciones.map((i) => (
+          <div key={i.email} className="flex items-center gap-3 px-5 py-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-50 text-primary-600"><Mail size={16} /></div>
+            <div className="min-w-0 flex-1 truncate text-sm">{i.email}</div>
+            <Badge>Invitación pendiente</Badge>
+            <button className="btn-ghost text-rose-600" title="Cancelar invitación" onClick={() => accion(supabase.from('rh_invitaciones').delete().eq('email', i.email))}><X size={16} /></button>
+          </div>
+        ))}
+      </div>
+      {esAdmin ? (
+        <form onSubmit={invitar} className="flex flex-wrap items-end gap-2 border-t border-primary-100 p-5">
+          <Field label="Correo a invitar" className="min-w-[220px] flex-1"><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="persona@empresa.com" /></Field>
+          <Field label="Rol"><Select value={rol} onChange={(e) => setRol(e.target.value)}><option value="usuario">Usuario</option><option value="admin">Administrador</option></Select></Field>
+          <button className="btn-primary"><UserPlus size={16} /> Invitar</button>
+          {error && <p className="w-full text-sm text-rose-600">{error}</p>}
+        </form>
+      ) : <p className="border-t border-primary-100 px-5 py-3 text-xs text-slate-500">Solo un administrador puede invitar o quitar usuarios.</p>}
+    </section>
+  )
+}
 
 export default function Configuracion() {
-  const { db, empresa, setEmpresa, eliminarItem, reemplazarDB } = useStore()
+  const { db, empresa, setEmpresa, eliminarItem, reemplazarDB, usuario } = useStore()
   const [edit, setEdit] = useState<Empresa | null>(null)
 
   const nueva = (): Empresa => ({ id: uid(), nombre: '', razonSocial: '', rfc: '', registroPatronal: '', direccion: '', color: '#5b2ff5', departamentos: ['Recursos Humanos', 'Administración'], periodicidadNomina: 'Quincenal' })
@@ -59,14 +134,18 @@ export default function Configuracion() {
           </div>
         </section>
 
+        <Usuarios />
+
         <section className="card p-5">
           <h2 className="font-semibold">Respaldo de información</h2>
-          <p className="mb-4 text-sm text-slate-500">La información se guarda en este navegador. Descarga respaldos periódicamente para no perder datos o para pasarlos a otra computadora.</p>
+          <p className="mb-4 text-sm text-slate-500">La información se guarda en la nube (Supabase) y está disponible desde cualquier computadora o celular. Además puedes descargar una copia de seguridad en un archivo.</p>
           <div className="flex flex-wrap gap-2">
             <button className="btn-primary" onClick={respaldar}><Download size={16} /> Descargar respaldo</button>
-            <label className="btn-secondary cursor-pointer"><Upload size={16} /> Restaurar respaldo<input type="file" accept="application/json" className="hidden" onChange={(e) => restaurar(e.target.files?.[0])} /></label>
-            <button className="btn-secondary" onClick={() => confirmar('¿Cargar los datos de demostración? Se reemplazará la información actual.') && reemplazarDB(crearDBDemo())}><RotateCcw size={16} /> Cargar datos de demostración</button>
-            <button className="btn-ghost text-rose-600" onClick={() => confirmar('¿Borrar TODA la información y empezar desde cero? Descarga un respaldo antes.') && reemplazarDB(crearDBVacia())}><Trash2 size={16} /> Empezar desde cero</button>
+            {usuario.rol === 'admin' && <>
+              <label className="btn-secondary cursor-pointer"><Upload size={16} /> Restaurar respaldo<input type="file" accept="application/json" className="hidden" onChange={(e) => restaurar(e.target.files?.[0])} /></label>
+              <button className="btn-secondary" onClick={() => confirmar('¿Cargar los datos de demostración? Se reemplazará TODA la información actual para todos los usuarios.') && reemplazarDB(crearDBDemo())}><RotateCcw size={16} /> Cargar datos de demostración</button>
+              <button className="btn-ghost text-rose-600" onClick={() => confirmar('¿Borrar TODA la información y empezar desde cero? Descarga un respaldo antes.') && reemplazarDB(crearDBVacia())}><Trash2 size={16} /> Empezar desde cero</button>
+            </>}
           </div>
         </section>
       </div>
