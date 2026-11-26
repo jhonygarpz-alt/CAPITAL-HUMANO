@@ -11,6 +11,8 @@ import Asistencias from './pages/Asistencias'
 import Vacaciones from './pages/Vacaciones'
 import Incidencias from './pages/Incidencias'
 import Vacantes from './pages/Vacantes'
+import Constancias from './pages/Constancias'
+import Aguinaldos, { AguinaldoDetalle } from './pages/Aguinaldos'
 import Reportes from './pages/Reportes'
 import Configuracion from './pages/Configuracion'
 import Ayuda from './pages/Ayuda'
@@ -33,6 +35,9 @@ export default function App() {
             <Route path="vacaciones" element={<Vacaciones />} />
             <Route path="incidencias" element={<Incidencias />} />
             <Route path="vacantes" element={<Vacantes />} />
+            <Route path="constancias" element={<Constancias />} />
+            <Route path="aguinaldos" element={<Aguinaldos />} />
+            <Route path="aguinaldos/:id" element={<AguinaldoDetalle />} />
             <Route path="reportes" element={<Reportes />} />
             <Route path="configuracion" element={<Configuracion />} />
             <Route path="ayuda" element={<Ayuda />} />

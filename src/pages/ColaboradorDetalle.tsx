@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   Pencil, Plus, Printer, Trash2, Upload, UserMinus, Info, FolderOpen, FileText, FileSignature, CalendarDays, AlertTriangle, Coins, History,
-  UserRound, CalendarRange, IdCard, ShieldCheck, Mail, MapPin, Phone, Briefcase, Network, DollarSign, Landmark, CreditCard, Clock, Users, Wallet, LogOut,
+  Stamp, UserRound, CalendarRange, IdCard, ShieldCheck, Mail, MapPin, Phone, Briefcase, Network, DollarSign, Landmark, CreditCard, Clock, Users, Wallet, LogOut,
 } from 'lucide-react'
 import { useStore } from '../store/Store'
 import { Avatar, Badge, DatoFila, Empty, Seccion, Table, Tabs, confirmar } from '../components/ui'
@@ -11,16 +11,18 @@ import { ExpedienteColaborador, ListaDocumentos, SubirDocumento, porcentajeExped
 import { ContratoForm, imprimirContrato } from '../components/Contratos'
 import { VacacionForm, saldoVacaciones } from '../components/Vacaciones'
 import { IncidenciaForm, cantidadTexto } from '../components/Incidencias'
+import { ConstanciaForm } from '../components/Constancias'
+import { detalleConstancia, reimprimir } from './Constancias'
 import { antiguedadTexto, estadoContrato, fmtFecha, fmtMoney, hoy, nombreCompleto } from '../lib/utils'
 
-type Tab = 'general' | 'expediente' | 'documentos' | 'contratos' | 'vacaciones' | 'incidencias' | 'nomina' | 'historial'
+type Tab = 'general' | 'expediente' | 'documentos' | 'contratos' | 'constancias' | 'vacaciones' | 'incidencias' | 'nomina' | 'historial'
 
 export default function ColaboradorDetalle() {
   const { id } = useParams()
   const [sp, setSp] = useSearchParams()
   const nav = useNavigate()
   const { db, guardarItem, eliminarItem } = useStore()
-  const [modal, setModal] = useState<null | 'editar' | 'doc' | 'contrato' | 'vac' | 'inc'>(null)
+  const [modal, setModal] = useState<null | 'editar' | 'doc' | 'contrato' | 'vac' | 'inc' | 'constancia'>(null)
   const c = db.colaboradores.find((x) => x.id === id)
   if (!c) return <Empty title="Colaborador no encontrado" action={<Link to="/colaboradores" className="btn-primary">Volver</Link>} />
 
@@ -28,6 +30,7 @@ export default function ColaboradorDetalle() {
   const docs = db.documentos.filter((d) => d.colaboradorId === c.id)
   const contratos = db.contratos.filter((k) => k.colaboradorId === c.id)
   const vacs = db.vacaciones.filter((v) => v.colaboradorId === c.id)
+  const consts = db.constancias.filter((k) => k.colaboradorId === c.id).sort((a, b) => b.fecha.localeCompare(a.fecha))
   const incs = db.incidencias.filter((i) => i.colaboradorId === c.id)
   const recibos = db.nominas.flatMap((n) => n.recibos.filter((r) => r.colaboradorId === c.id).map((r) => ({ n, r })))
   const eventos = db.eventos.filter((e) => e.colaboradorId === c.id).sort((a, b) => b.fecha.localeCompare(a.fecha))
@@ -69,6 +72,7 @@ export default function ColaboradorDetalle() {
           <span className="hidden h-20 w-px bg-white/30 xl:block" />
           <div className="flex flex-wrap gap-3">
             <button className="btn-accent px-5 py-2.5 text-base" onClick={() => setModal('editar')}><Pencil size={18} /> Editar</button>
+            <button className="btn-outline-light px-5 py-2.5 text-base" onClick={() => setModal('constancia')}><Stamp size={18} /> Constancia</button>
             {c.estatus !== 'Baja' && <button className="btn-outline-light px-5 py-2.5 text-base" onClick={darDeBaja}><UserMinus size={18} /> Dar de baja</button>}
             <button className="btn-outline-light px-3 py-2.5" onClick={eliminar} aria-label="Eliminar colaborador" title="Eliminar"><Trash2 size={18} /></button>
           </div>
@@ -81,6 +85,7 @@ export default function ColaboradorDetalle() {
         { id: 'expediente', label: 'Expediente', icon: FolderOpen, count: `${porcentajeExpediente(db.documentos, c.id)}%` },
         { id: 'documentos', label: 'Documentos', icon: FileText, count: docs.length },
         { id: 'contratos', label: 'Contratos', icon: FileSignature, count: contratos.length },
+        { id: 'constancias', label: 'Constancias', icon: Stamp, count: consts.length },
         { id: 'vacaciones', label: 'Vacaciones', icon: CalendarDays, count: vacs.length },
         { id: 'incidencias', label: 'Incidencias', icon: AlertTriangle, count: incs.length },
         { id: 'nomina', label: 'Nómina', icon: Coins, count: recibos.length },
@@ -166,6 +171,22 @@ export default function ColaboradorDetalle() {
           </Seccion>
         )}
 
+        {tab === 'constancias' && (
+          <Seccion titulo="Constancias emitidas" icon={Stamp} acciones={btnSeccion('Generar constancia', () => setModal('constancia'))}>
+            {consts.length === 0 ? <Empty title="Sin constancias emitidas" /> : (
+              <Table head={<><th className="th">Folio</th><th className="th">Fecha</th><th className="th">Tipo</th><th className="th">Detalle</th><th className="th" /></>}>
+                {consts.map((k) => (
+                  <tr key={k.id}>
+                    <td className="td font-mono font-semibold text-primary-700">{k.folio}</td><td className="td">{fmtFecha(k.fecha)}</td><td className="td">{k.tipo}</td>
+                    <td className="td max-w-xs truncate text-slate-600">{detalleConstancia(k)}</td>
+                    <td className="td text-right"><button className="btn-ghost" onClick={() => reimprimir(k, db)}><Printer size={16} /> Reimprimir</button></td>
+                  </tr>
+                ))}
+              </Table>
+            )}
+          </Seccion>
+        )}
+
         {tab === 'vacaciones' && (
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -234,6 +255,7 @@ export default function ColaboradorDetalle() {
       {modal === 'contrato' && <ContratoForm open colaboradorId={c.id} onClose={() => setModal(null)} />}
       {modal === 'vac' && <VacacionForm open colaboradorId={c.id} onClose={() => setModal(null)} />}
       {modal === 'inc' && <IncidenciaForm open colaboradorId={c.id} onClose={() => setModal(null)} />}
+      {modal === 'constancia' && <ConstanciaForm colaboradorId={c.id} onClose={() => setModal(null)} />}
     </>
   )
 }

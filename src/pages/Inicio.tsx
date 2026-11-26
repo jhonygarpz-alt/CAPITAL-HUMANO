@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Users, UserPlus, Palmtree, CalendarDays, CalendarX, Plus, FileWarning, Cake, ArrowRight, FolderOpen } from 'lucide-react'
+import { BellRing, Users, UserPlus, UserMinus, Palmtree, CalendarDays, CalendarX, Plus, FileWarning, Cake, ArrowRight, FolderOpen } from 'lucide-react'
 import { useStore } from '../store/Store'
-import { Avatar, Badge, Empty, PageHeader, StatCard, Table, Tabs, cx } from '../components/ui'
+import { Avatar, Badge, Empty, PageHeader, Seccion, StatCard, Table, Tabs, cx } from '../components/ui'
+import { calcularAvisos, ETIQUETA_AVISO } from '../lib/avisos'
 import { ColaboradorForm } from '../components/ColaboradorForm'
 import { AccionesFila, PanelColaborador } from './Colaboradores'
 import { porcentajeExpediente } from '../components/Documentos'
@@ -20,6 +21,7 @@ export default function Inicio() {
   const t = hoy()
   const inicioMes = t.slice(0, 8) + '01'
   const altasMes = cols.filter((c) => c.fechaIngreso >= inicioMes).length
+  const bajasMes = cols.filter((c) => c.estatus === 'Baja' && !!c.fechaBaja && c.fechaBaja >= inicioMes).length
   const vacantes = deEmpresa('vacantes').filter((v) => v.estatus === 'Abierta' || v.estatus === 'En proceso').reduce((s, v) => s + v.posiciones, 0)
   const incPend = deEmpresa('incidencias').filter((i) => i.estatus === 'Pendiente').length
   const contratos = deEmpresa('contratos')
@@ -38,11 +40,12 @@ export default function Inicio() {
 
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <StatCard icon={<Users size={22} />} value={activos.length} label="Colaboradores" tono="blue" onClick={() => nav('/colaboradores')} />
-            <StatCard icon={<UserPlus size={22} />} value={altasMes} label="Altas del mes" tono="green" onClick={() => nav('/reportes')} />
-            <StatCard icon={<CalendarDays size={22} />} value={vacantes} label="Vacantes" tono="navy" onClick={() => nav('/vacantes')} />
-            <StatCard icon={<CalendarX size={22} />} value={incPend} label="Incidencias" tono="red" onClick={() => nav('/incidencias')} />
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-5">
+            <StatCard icon={<Users size={22} />} compacto value={activos.length} label="Colaboradores" tono="blue" onClick={() => nav('/colaboradores')} />
+            <StatCard icon={<UserPlus size={22} />} compacto value={altasMes} label="Altas del mes" tono="green" onClick={() => nav('/reportes')} />
+            <StatCard icon={<UserMinus size={22} />} compacto value={bajasMes} label="Bajas del mes" tono="amber" onClick={() => nav('/reportes?r=altas')} />
+            <StatCard icon={<CalendarDays size={22} />} compacto value={vacantes} label="Vacantes" tono="navy" onClick={() => nav('/vacantes')} />
+            <StatCard icon={<CalendarX size={22} />} compacto value={incPend} label="Incidencias" tono="red" onClick={() => nav('/incidencias')} />
           </div>
 
           <div>
@@ -80,6 +83,8 @@ export default function Inicio() {
               <Link to={`/${tab === 'documentos' ? 'expedientes' : tab}`} className="inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:underline">Ver todo <ArrowRight size={14} /></Link>
             </div>
           </div>
+
+          <AvisosPanel />
 
           <div className="grid gap-6 md:grid-cols-2">
             <div className="card p-5">
@@ -135,5 +140,28 @@ function ProximasAusencias() {
         </ul>
       )}
     </div>
+  )
+}
+
+function AvisosPanel() {
+  const { db, empresa, puede } = useStore()
+  const avisos = useMemo(() => calcularAvisos(db, empresa), [db, empresa])
+  return (
+    <Seccion titulo="Avisos y recordatorios" icon={BellRing} acciones={puede('configuracion', 'editar') ? <Link to="/configuracion?tab=notificaciones" className="text-sm font-medium text-accent-300 hover:underline">Configurar</Link> : undefined}>
+      {avisos.length === 0 ? <p className="px-5 py-4 text-sm text-slate-500">No hay avisos por ahora. ✅</p> : (
+        <ul className="divide-y divide-slate-200">
+          {avisos.slice(0, 8).map((a) => (
+            <li key={a.id}>
+              <Link to={a.to} className="flex items-center gap-3 px-5 py-2.5 hover:bg-accent-50">
+                <span className={cx('h-2.5 w-2.5 shrink-0 rounded-full', a.urgente ? 'bg-rose-500' : 'bg-accent-500')} />
+                <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-primary-900">{a.titulo}</span><span className="block truncate text-xs text-slate-500">{a.detalle}</span></span>
+                <span className="hidden shrink-0 rounded-md bg-primary-50 px-2 py-0.5 text-xs font-semibold text-primary-700 sm:inline">{ETIQUETA_AVISO[a.tipo]}</span>
+              </Link>
+            </li>
+          ))}
+          {avisos.length > 8 && <li className="px-5 py-2 text-xs text-slate-500">Y {avisos.length - 8} aviso(s) más en la campana de notificaciones.</li>}
+        </ul>
+      )}
+    </Seccion>
   )
 }

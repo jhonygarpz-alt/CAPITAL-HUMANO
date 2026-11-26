@@ -181,11 +181,13 @@ export function Login() {
   )
 }
 
-export function SinAcceso({ email, onReintentar }: { email: string; onReintentar: () => void }) {
+export function SinAcceso({ email, onReintentar, inactivo }: { email: string; onReintentar: () => void; inactivo?: boolean }) {
   return (
     <Marco>
-      <h1 className="mb-2 text-xl font-bold text-primary-700">Acceso pendiente</h1>
-      <p className="mb-5 text-sm text-slate-600">La cuenta <b>{email}</b> aún no tiene permiso. Pide al administrador que te invite desde <b>Configuración → Usuarios</b> con este mismo correo y luego pulsa "Reintentar".</p>
+      <h1 className="mb-2 text-xl font-bold text-primary-700">{inactivo ? 'Usuario desactivado' : 'Acceso pendiente'}</h1>
+      <p className="mb-5 text-sm text-slate-600">{inactivo
+        ? <>La cuenta <b>{email}</b> fue desactivada por un administrador. Si crees que es un error, comunícate con el área de Recursos Humanos.</>
+        : <>La cuenta <b>{email}</b> aún no tiene permiso. Pide al administrador que te invite desde <b>Configuración → Usuarios</b> con este mismo correo y luego pulsa "Reintentar".</>}</p>
       <div className="flex gap-2">
         <button className="btn-primary" onClick={onReintentar}>Reintentar</button>
         <button className="btn-secondary" onClick={() => supabase.auth.signOut()}><LogOut size={16} /> Salir</button>
