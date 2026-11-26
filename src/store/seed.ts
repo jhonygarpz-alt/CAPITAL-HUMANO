@@ -130,7 +130,7 @@ export function crearDBDemo(): DB {
   return {
     version: 1,
     empresaActualId: 'emp-a',
-    empresas, colaboradores, documentos, contratos, vacaciones, vacantes, constancias: [], aguinaldos: [], ajustes: [], asistencias, incidencias,
+    empresas, colaboradores, documentos, contratos, vacaciones, vacantes, constancias: [], aguinaldos: [], ajustes: [], prestamos: [], asistencias, incidencias,
     nominas: [],
     eventos: colaboradores.map((c) => ({ id: uid(), empresaId: c.empresaId, colaboradorId: c.id, fecha: c.fechaIngreso + 'T09:00', modulo: 'Colaboradores', accion: `Alta de ${c.nombre} ${c.apellidoPaterno} como ${c.puesto}` })),
   }
@@ -140,6 +140,6 @@ export function crearDBVacia(): DB {
   return {
     version: 1, empresaActualId: 'emp-1',
     empresas: [{ id: 'emp-1', nombre: 'Mi empresa', razonSocial: '', rfc: '', registroPatronal: '', direccion: '', color: '#064467', departamentos: ['Recursos Humanos', 'Administración'], periodicidadNomina: 'Quincenal' }],
-    colaboradores: [], documentos: [], contratos: [], vacaciones: [], vacantes: [], constancias: [], aguinaldos: [], ajustes: [], asistencias: [], incidencias: [], nominas: [], eventos: [],
+    colaboradores: [], documentos: [], contratos: [], vacaciones: [], vacantes: [], constancias: [], aguinaldos: [], ajustes: [], prestamos: [], asistencias: [], incidencias: [], nominas: [], eventos: [],
   }
 }

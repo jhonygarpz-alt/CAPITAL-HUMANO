@@ -33,10 +33,10 @@ interface StoreValue {
 
 const Ctx = createContext<StoreValue | null>(null)
 
-export const COLECCIONES: Coleccion[] = ['empresas', 'colaboradores', 'documentos', 'contratos', 'vacaciones', 'vacantes', 'constancias', 'aguinaldos', 'ajustes', 'asistencias', 'incidencias', 'nominas', 'eventos']
+export const COLECCIONES: Coleccion[] = ['empresas', 'colaboradores', 'documentos', 'contratos', 'vacaciones', 'vacantes', 'constancias', 'aguinaldos', 'ajustes', 'prestamos', 'asistencias', 'incidencias', 'nominas', 'eventos']
 
 const MODULOS: Partial<Record<Coleccion, string>> = {
-  colaboradores: 'Colaboradores', documentos: 'Expedientes', contratos: 'Contratos', vacaciones: 'Vacaciones', vacantes: 'Vacantes', constancias: 'Constancias', aguinaldos: 'Aguinaldos', ajustes: 'Configuración',
+  colaboradores: 'Colaboradores', documentos: 'Expedientes', contratos: 'Contratos', vacaciones: 'Vacaciones', vacantes: 'Vacantes', constancias: 'Constancias', aguinaldos: 'Aguinaldos', ajustes: 'Configuración', prestamos: 'Préstamos',
   asistencias: 'Asistencias', incidencias: 'Incidencias', nominas: 'Nómina', empresas: 'Configuración',
 }
 
@@ -232,7 +232,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (!prev) return prev
       const next = { ...prev, [col]: (prev[col] as { id: ID }[]).filter((x) => x.id !== id) } as DB
       // Eliminación en cascada de la información relacionada
-      const relacionadas = ['documentos', 'contratos', 'vacaciones', 'asistencias', 'incidencias', 'constancias', 'eventos'] as const
+      const relacionadas = ['documentos', 'contratos', 'vacaciones', 'asistencias', 'incidencias', 'constancias', 'prestamos', 'eventos'] as const
       const mut = next as unknown as Record<string, unknown>
       if (col === 'colaboradores') for (const r of relacionadas) mut[r] = (next[r] as { colaboradorId?: ID }[]).filter((x) => x.colaboradorId !== id)
       if (col === 'empresas') for (const r of [...relacionadas, 'colaboradores', 'nominas', 'vacantes', 'aguinaldos'] as const) mut[r] = (next[r] as { empresaId: ID }[]).filter((x) => x.empresaId !== id)
@@ -249,7 +249,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setEmpresa: (id) => { guardarPref(id); setDb((p) => (p ? { ...p, empresaActualId: id } : p)) },
       guardarItem,
       eliminarItem,
-      reemplazarDB: (d) => setDb({ ...dbVacia(), ...d, vacantes: d.vacantes ?? [], constancias: d.constancias ?? [], aguinaldos: d.aguinaldos ?? [], ajustes: d.ajustes ?? [], empresaActualId: d.empresaActualId || d.empresas[0]?.id || '' }),
+      reemplazarDB: (d) => setDb({ ...dbVacia(), ...d, vacantes: d.vacantes ?? [], constancias: d.constancias ?? [], aguinaldos: d.aguinaldos ?? [], ajustes: d.ajustes ?? [], prestamos: d.prestamos ?? [], empresaActualId: d.empresaActualId || d.empresas[0]?.id || '' }),
       deEmpresa: (col) => (db[col] as { empresaId: ID }[]).filter((x) => x.empresaId === empresa.id) as never,
       usuario,
       sync,

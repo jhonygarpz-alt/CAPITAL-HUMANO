@@ -31,7 +31,7 @@ export const permisosDe = (rolId: string, rol?: Rol | null): Permisos =>
 export function moduloDe(col: Coleccion): Modulo | null {
   if (col === 'eventos') return null
   if (col === 'documentos') return 'expedientes'
-  if (col === 'nominas') return 'nomina'
+  if (col === 'nominas' || col === 'prestamos') return 'nomina'
   if (col === 'empresas' || col === 'ajustes') return 'configuracion'
   return col as Modulo
 }

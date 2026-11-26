@@ -13,6 +13,8 @@ import { VacacionForm, saldoVacaciones } from '../components/Vacaciones'
 import { IncidenciaForm, cantidadTexto } from '../components/Incidencias'
 import { ConstanciaForm } from '../components/Constancias'
 import { detalleConstancia, reimprimir } from './Constancias'
+import { imprimirRecibos } from './Nomina'
+import PrestamosPanel from './Prestamos'
 import { antiguedadTexto, estadoContrato, fmtFecha, fmtMoney, hoy, nombreCompleto } from '../lib/utils'
 
 type Tab = 'general' | 'expediente' | 'documentos' | 'contratos' | 'constancias' | 'vacaciones' | 'incidencias' | 'nomina' | 'historial'
@@ -220,15 +222,25 @@ export default function ColaboradorDetalle() {
         )}
 
         {tab === 'nomina' && (
-          <Seccion titulo="Recibos de nómina" icon={Coins}>
-            {recibos.length === 0 ? <Empty title="Sin recibos de nómina" text="Los recibos aparecen aquí cuando se calcula una nómina que incluye a este colaborador." /> : (
-              <Table head={<><th className="th">Periodo</th><th className="th">Percepciones</th><th className="th">Deducciones</th><th className="th">Neto</th><th className="th">Estatus</th></>}>
-                {recibos.map(({ n, r }) => (
-                  <tr key={n.id}><td className="td"><Link className="font-semibold text-primary-700 hover:underline" to={`/nomina/${n.id}`}>{n.nombre}</Link></td><td className="td">{fmtMoney(r.totalPercepciones)}</td><td className="td">{fmtMoney(r.totalDeducciones)}</td><td className="td font-bold text-primary-900">{fmtMoney(r.neto)}</td><td className="td"><Badge>{n.estatus}</Badge></td></tr>
-                ))}
-              </Table>
-            )}
-          </Seccion>
+          <>
+            <Seccion titulo="Recibos de nómina" icon={Coins}>
+              {recibos.length === 0 ? <Empty title="Sin recibos de nómina" text="Los recibos aparecen aquí cuando se calcula una nómina que incluye a este colaborador." /> : (
+                <Table head={<><th className="th">Periodo</th><th className="th text-right">Percepciones</th><th className="th text-right">Deducciones</th><th className="th text-right">Neto</th><th className="th">Estatus</th><th className="th" /></>}>
+                  {recibos.map(({ n, r }) => (
+                    <tr key={n.id}>
+                      <td className="td"><Link className="font-semibold text-primary-700 hover:underline" to={`/nomina/${n.id}`}>{n.nombre}</Link></td>
+                      <td className="td text-right text-accent-700">{fmtMoney(r.totalPercepciones)}</td>
+                      <td className="td text-right text-rose-600">{fmtMoney(r.totalDeducciones)}</td>
+                      <td className="td text-right font-bold text-primary-900">{fmtMoney(r.neto)}</td>
+                      <td className="td"><Badge>{n.estatus}</Badge></td>
+                      <td className="td text-right"><button className="btn-ghost" onClick={() => imprimirRecibos(n, [r], db)}><Printer size={16} /> Recibo</button></td>
+                    </tr>
+                  ))}
+                </Table>
+              )}
+            </Seccion>
+            <PrestamosPanel colaboradorId={c.id} />
+          </>
         )}
 
         {tab === 'historial' && (

@@ -282,8 +282,33 @@ export interface Incidencia {
   estatus: 'Pendiente' | 'Aplicada'
 }
 
+export type ClaveConcepto =
+  | 'sueldo' | 'horas_dobles' | 'horas_triples' | 'bono' | 'comision' | 'premio_puntualidad' | 'premio_asistencia' | 'prima_dominical' | 'otra_percepcion'
+  | 'faltas' | 'isr' | 'imss' | 'prestamo' | 'infonavit' | 'fonacot' | 'pension_alimenticia' | 'caja_ahorro' | 'anticipo' | 'descuento' | 'otra_deduccion'
+
+export interface ConceptoNomina {
+  id: ID
+  tipo: 'percepcion' | 'deduccion'
+  clave: ClaveConcepto
+  descripcion: string
+  /** Horas o días, cuando aplica */
+  cantidad?: number
+  importe: number
+  /** Parte gravada para ISR (percepciones) */
+  gravado?: number
+  origen: 'automatico' | 'incidencia' | 'manual' | 'prestamo'
+  prestamoId?: ID
+}
+
 export interface Recibo {
   colaboradorId: ID
+  /** Desglose de percepciones y deducciones */
+  conceptos?: ConceptoNomina[]
+  /** Conceptos capturados a mano (se conservan al recalcular) */
+  manuales?: ConceptoNomina[]
+  /** Préstamos que no se descuentan en este periodo */
+  prestamosOmitidos?: ID[]
+  baseGravable?: number
   diasPeriodo: number
   diasFalta: number
   salarioDiario: number
@@ -312,6 +337,34 @@ export interface PeriodoNomina {
   fechaCreacion: string
 }
 
+export interface PagoPrestamo {
+  id: ID
+  fecha: string
+  importe: number
+  nominaId?: ID
+  nota?: string
+}
+
+export interface Prestamo {
+  id: ID
+  empresaId: ID
+  colaboradorId: ID
+  folio: string
+  fechaSolicitud: string
+  /** Fecha a partir de la cual se empieza a descontar */
+  fechaInicio: string
+  monto: number
+  /** Interés total en porcentaje sobre el monto (0 = sin interés) */
+  interes: number
+  numeroPagos: number
+  /** Descuento por nómina */
+  descuento: number
+  motivo: string
+  estatus: 'Activo' | 'Liquidado' | 'Cancelado' | 'Pausado'
+  pagos: PagoPrestamo[]
+  notas?: string
+}
+
 export interface Evento {
   id: ID
   empresaId: ID
@@ -333,6 +386,7 @@ export interface DB {
   constancias: Constancia[]
   aguinaldos: PeriodoAguinaldo[]
   ajustes: Ajustes[]
+  prestamos: Prestamo[]
   asistencias: Asistencia[]
   incidencias: Incidencia[]
   nominas: PeriodoNomina[]
