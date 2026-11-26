@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode, type InputHTMLAttributes, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
-import { X, Inbox } from 'lucide-react'
+import { X, Inbox, UserRound, type LucideIcon } from 'lucide-react'
 import type { Colaborador } from '../types'
 import { iniciales } from '../lib/utils'
 
@@ -11,7 +11,7 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-[32px] sm:leading-tight">{title}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-primary-700 sm:text-[30px] sm:leading-tight">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-slate-600">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -20,71 +20,67 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
 }
 
 const TONOS = {
-  violet: 'bg-gradient-to-br from-violet-100 to-primary-200 text-primary-700',
-  green: 'bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600',
-  blue: 'bg-gradient-to-br from-sky-100 to-blue-200 text-blue-600',
-  red: 'bg-gradient-to-br from-rose-100 to-rose-200 text-rose-600',
-  amber: 'bg-gradient-to-br from-amber-100 to-amber-200 text-amber-600',
-  slate: 'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600',
+  navy: 'bg-primary-600 text-white',
+  green: 'bg-accent-500 text-primary-900',
+  blue: 'bg-primary-500 text-white',
+  red: 'bg-rose-600 text-white',
+  amber: 'bg-amber-500 text-white',
+  slate: 'bg-slate-500 text-white',
 }
 export type Tono = keyof typeof TONOS
 
-export function StatCard({ icon, value, label, tono = 'violet', onClick }: { icon: ReactNode; value: ReactNode; label: string; tono?: Tono; onClick?: () => void }) {
+export function StatCard({ icon, value, label, tono = 'navy', onClick }: { icon: ReactNode; value: ReactNode; label: string; tono?: Tono; onClick?: () => void }) {
   return (
-    <button type="button" onClick={onClick} disabled={!onClick} className="card-glow flex flex-col items-start gap-2 p-4 text-left transition enabled:hover:-translate-y-0.5 enabled:hover:border-primary-400 disabled:cursor-default sm:p-5">
-      <div className={cx('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-sm ring-1 ring-white', TONOS[tono])}>{icon}</div>
+    <button type="button" onClick={onClick} disabled={!onClick}
+      className="card flex items-center gap-4 border-b-4 border-b-accent-500 p-4 text-left transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-md disabled:cursor-default sm:p-5">
+      <div className={cx('flex h-12 w-12 shrink-0 items-center justify-center rounded-lg shadow-sm', TONOS[tono])}>{icon}</div>
       <div className="min-w-0">
-        <div className="truncate text-2xl font-bold leading-tight text-slate-900 sm:text-[28px]">{value}</div>
-        <div className="text-sm leading-tight text-slate-700 sm:text-base">{label}</div>
+        <div className="truncate text-2xl font-extrabold leading-tight text-primary-700 sm:text-[28px]">{value}</div>
+        <div className="text-sm font-medium leading-tight text-slate-600">{label}</div>
       </div>
     </button>
   )
 }
 
+const VERDE = 'bg-accent-100 text-accent-800 ring-accent-600/30'
+const AMBAR = 'bg-amber-50 text-amber-700 ring-amber-600/25'
+const AZUL = 'bg-primary-50 text-primary-700 ring-primary-600/25'
+const GRIS = 'bg-slate-100 text-slate-600 ring-slate-500/20'
+const ROJO = 'bg-rose-50 text-rose-700 ring-rose-600/25'
 const BADGES: Record<string, string> = {
-  Activo: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-  Vigente: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-  Aprobada: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-  Asistencia: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-  Aplicada: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-  Cerrada: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-  Completo: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-  Pendiente: 'bg-amber-50 text-amber-700 ring-amber-600/20',
-  'Por vencer': 'bg-amber-50 text-amber-700 ring-amber-600/20',
-  Retardo: 'bg-amber-50 text-amber-700 ring-amber-600/20',
-  Incapacidad: 'bg-sky-50 text-sky-700 ring-sky-600/20',
-  Permiso: 'bg-sky-50 text-sky-700 ring-sky-600/20',
-  'Home office': 'bg-sky-50 text-sky-700 ring-sky-600/20',
-  Borrador: 'bg-slate-100 text-slate-700 ring-slate-500/20',
-  Baja: 'bg-slate-100 text-slate-600 ring-slate-500/20',
-  Cancelado: 'bg-slate-100 text-slate-600 ring-slate-500/20',
-  Vencido: 'bg-rose-50 text-rose-700 ring-rose-600/20',
-  Rechazada: 'bg-rose-50 text-rose-700 ring-rose-600/20',
-  Falta: 'bg-rose-50 text-rose-700 ring-rose-600/20',
-  Incompleto: 'bg-rose-50 text-rose-700 ring-rose-600/20',
-  Abierta: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-  'En proceso': 'bg-sky-50 text-sky-700 ring-sky-600/20',
-  Cubierta: 'bg-primary-50 text-primary-700 ring-primary-600/20',
-  Cancelada: 'bg-slate-100 text-slate-600 ring-slate-500/20',
+  Activo: VERDE, Vigente: VERDE, Aprobada: VERDE, Asistencia: VERDE, Aplicada: VERDE, Cerrada: VERDE, Completo: VERDE, Abierta: VERDE,
+  Pendiente: AMBAR, 'Por vencer': AMBAR, Retardo: AMBAR,
+  Incapacidad: AZUL, Permiso: AZUL, 'Home office': AZUL, 'En proceso': AZUL, Cubierta: AZUL,
+  Borrador: GRIS, Baja: GRIS, Cancelado: GRIS, Cancelada: GRIS,
+  Vencido: ROJO, Rechazada: ROJO, Falta: ROJO, Incompleto: ROJO,
 }
-const PUNTO: Record<string, string> = { Activo: 'bg-emerald-500', Vigente: 'bg-emerald-500', Aprobada: 'bg-emerald-500', Abierta: 'bg-emerald-500' }
-export function Badge({ children, className }: { children: string; className?: string }) {
+const PUNTO: Record<string, string> = { Activo: 'bg-accent-600', Vigente: 'bg-accent-600', Aprobada: 'bg-accent-600', Abierta: 'bg-accent-600', Completo: 'bg-accent-600' }
+export function Badge({ children, className, solido }: { children: string; className?: string; solido?: boolean }) {
+  const verde = BADGES[children] === VERDE
   return (
-    <span className={cx('inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset', BADGES[children] ?? 'bg-primary-50 text-primary-700 ring-primary-600/20', className)}>
-      <span className={cx('h-2 w-2 rounded-full', PUNTO[children] ?? 'bg-current opacity-70')} />
+    <span className={cx('inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset',
+      solido && verde ? 'bg-accent-500 text-primary-900 ring-accent-600' : BADGES[children] ?? AZUL, className)}>
+      <span className={cx('h-2 w-2 rounded-full', solido && verde ? 'bg-primary-800' : PUNTO[children] ?? 'bg-current opacity-70')} />
       {children}
     </span>
   )
 }
 
-const AV_COLORES = ['bg-primary-100 text-primary-700', 'bg-sky-100 text-sky-700', 'bg-emerald-100 text-emerald-700', 'bg-amber-100 text-amber-700', 'bg-rose-100 text-rose-700', 'bg-indigo-100 text-indigo-700']
+const AV_COLORES = ['bg-primary-100 text-primary-700', 'bg-accent-100 text-accent-800', 'bg-sky-100 text-sky-800', 'bg-slate-200 text-slate-700']
 export function Avatar({ c, size = 36, cuadrado }: { c: Pick<Colaborador, 'nombre' | 'apellidoPaterno' | 'foto' | 'id'>; size?: number; cuadrado?: boolean }) {
   const color = AV_COLORES[(c.id.charCodeAt(0) + c.id.charCodeAt(1)) % AV_COLORES.length]
-  const forma = cuadrado ? 'rounded-2xl shadow-md ring-4' : 'rounded-full ring-2'
+  if (cuadrado) {
+    return (
+      <div className="shrink-0 overflow-hidden rounded-xl border-4 border-accent-500 bg-slate-100 shadow-md" style={{ width: size, height: size }}>
+        {c.foto ? <img src={c.foto} alt="" className="h-full w-full object-cover" />
+          : <div className="flex h-full w-full items-end justify-center text-slate-400"><UserRound size={size * 0.8} strokeWidth={1.4} fill="currentColor" className="-mb-2 opacity-70" /></div>}
+      </div>
+    )
+  }
   return c.foto ? (
-    <img src={c.foto} alt="" className={cx('shrink-0 object-cover ring-white', forma)} style={{ width: size, height: size }} />
+    <img src={c.foto} alt="" className="shrink-0 rounded-full object-cover ring-2 ring-white" style={{ width: size, height: size }} />
   ) : (
-    <div className={cx('flex shrink-0 items-center justify-center font-semibold ring-white', forma, color)} style={{ width: size, height: size, fontSize: size * 0.36 }}>
+    <div className={cx('flex shrink-0 items-center justify-center rounded-full font-bold ring-2 ring-white', color)} style={{ width: size, height: size, fontSize: size * 0.36 }}>
       {iniciales(c)}
     </div>
   )
@@ -99,14 +95,14 @@ export function Modal({ open, onClose, title, children, footer, wide }: { open: 
   }, [open, onClose])
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={onClose}>
-      <div className={cx('flex max-h-[92vh] w-full flex-col rounded-t-2xl border border-primary-200 bg-white/95 shadow-2xl backdrop-blur-xl sm:rounded-2xl', wide ? 'sm:max-w-3xl' : 'sm:max-w-lg')} onMouseDown={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-primary-100 px-5 py-4">
-          <h2 className="text-base font-semibold text-slate-900">{title}</h2>
-          <button className="btn-ghost" onClick={onClose} aria-label="Cerrar"><X size={18} /></button>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-primary-900/50 p-0 sm:items-center sm:p-4" onMouseDown={onClose}>
+      <div className={cx('flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-xl bg-white shadow-2xl sm:rounded-xl', wide ? 'sm:max-w-3xl' : 'sm:max-w-lg')} onMouseDown={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-l-[6px] border-accent-500 bg-primary-600 px-5 py-3.5 text-white">
+          <h2 className="text-base font-bold">{title}</h2>
+          <button className="rounded-lg p-1.5 hover:bg-white/10" onClick={onClose} aria-label="Cerrar"><X size={18} /></button>
         </div>
         <div className="overflow-y-auto px-5 py-4">{children}</div>
-        {footer && <div className="flex justify-end gap-2 border-t border-slate-100 px-5 py-3">{footer}</div>}
+        {footer && <div className="flex justify-end gap-2 border-t border-slate-200 bg-slate-50 px-5 py-3">{footer}</div>}
       </div>
     </div>
   )
@@ -128,24 +124,31 @@ export const Textarea = (p: TextareaHTMLAttributes<HTMLTextAreaElement>) => <tex
 export function Empty({ title, text, action }: { title: string; text?: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
-      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400"><Inbox size={22} /></div>
-      <p className="font-medium text-slate-700">{title}</p>
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary-50 text-primary-400"><Inbox size={22} /></div>
+      <p className="font-semibold text-primary-700">{title}</p>
       {text && <p className="mt-1 max-w-sm text-sm text-slate-500">{text}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   )
 }
 
-export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: T; label: string; count?: number }[]; value: T; onChange: (t: T) => void }) {
+export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: T; label: string; count?: number | string; icon?: LucideIcon }[]; value: T; onChange: (t: T) => void }) {
   return (
-    <div className="flex gap-2 overflow-x-auto border-b border-primary-200/80">
-      {tabs.map((t) => (
-        <button key={t.id} onClick={() => onChange(t.id)} className={cx('relative whitespace-nowrap px-4 pb-3 pt-2.5 text-[15px] font-medium transition', value === t.id ? 'text-primary-700' : 'text-slate-700 hover:text-slate-900')}>
-          {t.label}
-          {t.count !== undefined && <span className={cx('ml-1.5 rounded-full px-1.5 py-0.5 text-xs', value === t.id ? 'bg-primary-100' : 'bg-slate-100')}>{t.count}</span>}
-          {value === t.id && <span className="absolute inset-x-1 bottom-0 h-1 rounded-full bg-gradient-to-r from-violet-500 to-primary-600 shadow-[0_0_8px_rgba(124,58,237,.6)]" />}
-        </button>
-      ))}
+    <div className="flex overflow-x-auto rounded-t-lg border-b-2 border-slate-300 bg-white/70">
+      {tabs.map((t, i) => {
+        const activo = value === t.id
+        const Icon = t.icon
+        return (
+          <button key={t.id} onClick={() => onChange(t.id)}
+            className={cx('relative -mb-[2px] flex items-center gap-2 whitespace-nowrap border-b-4 px-4 py-3 text-[15px] font-semibold transition',
+              activo ? 'rounded-t-lg border-accent-600 bg-accent-500 text-primary-900' : 'border-transparent text-primary-700 hover:bg-primary-50',
+              i > 0 && !activo && 'before:absolute before:left-0 before:top-3 before:h-6 before:w-px before:bg-slate-300')}>
+            {Icon && <Icon size={20} strokeWidth={1.9} />}
+            {t.label}
+            {t.count !== undefined && <span className={cx('rounded-md px-1.5 py-0.5 text-xs font-bold', activo ? 'bg-white/70 text-primary-800' : 'bg-accent-100 text-accent-800')}>{t.count}</span>}
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -153,9 +156,9 @@ export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: 
 export function Table({ head, children }: { head: ReactNode; children: ReactNode }) {
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-primary-100">
-        <thead className="bg-white/40"><tr>{head}</tr></thead>
-        <tbody className="divide-y divide-primary-100/70">{children}</tbody>
+      <table className="min-w-full">
+        <thead><tr>{head}</tr></thead>
+        <tbody className="divide-y divide-slate-200 [&>tr:nth-child(even)]:bg-slate-50/70">{children}</tbody>
       </table>
     </div>
   )
@@ -163,10 +166,35 @@ export function Table({ head, children }: { head: ReactNode; children: ReactNode
 
 export function Progress({ value, className }: { value: number; className?: string }) {
   const v = Math.max(0, Math.min(100, value))
-  const color = v >= 100 ? 'bg-emerald-500' : v >= 60 ? 'bg-primary-500' : 'bg-amber-500'
+  const color = v >= 100 ? 'bg-accent-500' : v >= 60 ? 'bg-primary-500' : 'bg-amber-500'
   return (
-    <div className={cx('h-2 w-full overflow-hidden rounded-full bg-slate-100', className)}>
+    <div className={cx('h-2.5 w-full overflow-hidden rounded-full bg-slate-200', className)}>
       <div className={cx('h-full rounded-full transition-all', color)} style={{ width: `${v}%` }} />
+    </div>
+  )
+}
+
+/** Tarjeta de sección de las fichas: encabezado azul con acento verde. */
+export function Seccion({ titulo, icon: Icon, children, acciones, className }: { titulo: string; icon?: LucideIcon; children: ReactNode; acciones?: ReactNode; className?: string }) {
+  return (
+    <section className={cx('seccion', className)}>
+      <div className="seccion-titulo">
+        {Icon && <Icon size={24} strokeWidth={2} />}
+        <h3 className="flex-1">{titulo}</h3>
+        {acciones}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+/** Renglón "ícono · etiqueta · valor" usado en las fichas. */
+export function DatoFila({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value?: ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 border-b border-slate-200 py-2 last:border-b-0">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-100 text-primary-700"><Icon size={18} strokeWidth={2} /></span>
+      <span className="w-40 shrink-0 text-sm text-slate-700 sm:w-48">{label}</span>
+      <span className="min-w-0 flex-1 break-words text-[15px] font-bold text-primary-900">{value || '—'}</span>
     </div>
   )
 }

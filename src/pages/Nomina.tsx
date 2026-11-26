@@ -177,7 +177,7 @@ function imprimirRecibos(n: PeriodoNomina, recibos: Recibo[], db: DB) {
   w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${n.nombre}</title><style>
 body{font-family:Arial,sans-serif;font-size:12px;color:#111;margin:0;padding:20px}section{border:1px solid #ccc;border-radius:8px;padding:16px;margin-bottom:20px;page-break-inside:avoid}
 header,.emp{display:flex;justify-content:space-between;gap:12px;margin-bottom:12px}.emp{background:#f5f5f7;padding:8px;border-radius:6px}.cols{display:flex;gap:16px}table{flex:1;border-collapse:collapse}
-th{text-align:left;border-bottom:2px solid #5b2ff5;padding:4px}td{padding:3px 4px;border-bottom:1px solid #eee}.r{text-align:right}.t td{font-weight:bold}.neto{text-align:right;font-size:15px;font-weight:bold;margin-top:12px}
+th{text-align:left;border-bottom:2px solid #7CC142;padding:4px}td{padding:3px 4px;border-bottom:1px solid #eee}.r{text-align:right}.t td{font-weight:bold}.neto{text-align:right;font-size:15px;font-weight:bold;margin-top:12px}
 .firma{text-align:center;margin-top:16px;font-size:11px}@media print{button{display:none}section{page-break-after:always}}</style></head><body>
 <button onclick="print()" style="padding:8px 14px;margin-bottom:12px">Imprimir / Guardar PDF</button>${paginas}<p style="font-size:10px;color:#666">Generado el ${fmtFechaLarga(hoy())}. Documento informativo, no sustituye al CFDI de nómina.</p></body></html>`)
   w.document.close()
