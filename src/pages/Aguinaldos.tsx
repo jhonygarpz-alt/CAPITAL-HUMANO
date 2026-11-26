@@ -33,7 +33,7 @@ export default function Aguinaldos() {
     <>
       <PageHeader title="Aguinaldos" subtitle={`Cálculo del aguinaldo ${anio} de ${empresa.nombre} conforme al art. 87 de la LFT`}
         actions={<button className="btn-accent" onClick={() => setNuevo(true)}><Calculator size={16} /> Calcular aguinaldo {anio}</button>} />
-      <div className="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard icon={<CalendarClock size={22} />} value={faltan >= 0 ? `${faltan} días` : 'Vencido'} label={`Pago límite: ${fmtFecha(f.pago)}`} tono={faltan < 0 ? 'red' : faltan <= 15 ? 'amber' : 'navy'} />
         <StatCard icon={<Users size={22} />} value={estimado.length} label="Colaboradores con derecho" tono="green" />
         <StatCard icon={<Gift size={22} />} value={fmtMoney(sumar(estimado, 'importe'))} label="Aguinaldo bruto estimado" tono="blue" />
@@ -224,7 +224,7 @@ export function AguinaldoDetalle() {
             <button className="btn-ghost text-rose-600" title="Eliminar" onClick={() => { if (confirmar('¿Eliminar este cálculo?')) { eliminarItem('aguinaldos', p.id); nav('/aguinaldos') } }}><Trash2 size={16} /></button>
           </>}
         </>} />
-      <div className="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard icon={<Gift size={22} />} value={fmtMoney(t('importe'))} label="Aguinaldo bruto" />
         <StatCard icon={<Scale size={22} />} value={fmtMoney(t('exento'))} label={`Exento · gravado ${fmtMoney(t('gravado'))}`} tono="green" />
         <StatCard icon={<Calculator size={22} />} value={fmtMoney(t('isr'))} label={`ISR (${p.config.metodoISR})`} tono="red" />
