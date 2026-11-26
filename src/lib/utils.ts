@@ -185,3 +185,50 @@ export function fmtTamano(b?: number) {
 }
 
 export const normalizar = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+/** Fecha en inglés: "November 26, 2026". */
+export function fmtFechaIngles(s?: string) {
+  if (!s) return '—'
+  const d = parseISO(s)
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`
+}
+
+const UNIDADES = ['', 'UNO', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE', 'DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISÉIS', 'DIECISIETE', 'DIECIOCHO', 'DIECINUEVE', 'VEINTE', 'VEINTIUNO', 'VEINTIDÓS', 'VEINTITRÉS', 'VEINTICUATRO', 'VEINTICINCO', 'VEINTISÉIS', 'VEINTISIETE', 'VEINTIOCHO', 'VEINTINUEVE']
+const DECENAS = ['', '', '', 'TREINTA', 'CUARENTA', 'CINCUENTA', 'SESENTA', 'SETENTA', 'OCHENTA', 'NOVENTA']
+const CENTENAS = ['', 'CIENTO', 'DOSCIENTOS', 'TRESCIENTOS', 'CUATROCIENTOS', 'QUINIENTOS', 'SEISCIENTOS', 'SETECIENTOS', 'OCHOCIENTOS', 'NOVECIENTOS']
+
+function centenasEnLetra(n: number): string {
+  if (n === 0) return ''
+  if (n === 100) return 'CIEN'
+  const c = Math.floor(n / 100), r = n % 100
+  let t = CENTENAS[c]
+  if (r) {
+    const dec = r < 30 ? UNIDADES[r] : DECENAS[Math.floor(r / 10)] + (r % 10 ? ' Y ' + UNIDADES[r % 10] : '')
+    t = (t ? t + ' ' : '') + dec
+  }
+  return t
+}
+
+const apocopar = (t: string) => t.replace(/VEINTIUNO$/, 'VEINTIÚN').replace(/UNO$/, 'UN')
+
+/** Convierte un entero a letras en español (hasta 999,999,999). */
+export function enteroEnLetra(n: number): string {
+  n = Math.floor(Math.abs(n))
+  if (n === 0) return 'CERO'
+  const millones = Math.floor(n / 1_000_000), miles = Math.floor((n % 1_000_000) / 1000), resto = n % 1000
+  const partes: string[] = []
+  if (millones) partes.push(millones === 1 ? 'UN MILLÓN' : `${apocopar(centenasEnLetra(millones))} MILLONES`)
+  if (miles) partes.push(miles === 1 ? 'MIL' : `${apocopar(centenasEnLetra(miles))} MIL`)
+  if (resto) partes.push(centenasEnLetra(resto))
+  return partes.join(' ')
+}
+
+/** Importe en letra con formato de documentos mexicanos: "MIL PESOS 50/100 M.N." */
+export function importeEnLetra(monto: number) {
+  const entero = Math.floor(monto + 1e-9)
+  const centavos = Math.round((monto - entero) * 100)
+  const letras = apocopar(enteroEnLetra(entero))
+  const millonExacto = entero >= 1_000_000 && entero % 1_000_000 === 0
+  return `${letras}${millonExacto ? ' DE' : ''} ${entero === 1 ? 'PESO' : 'PESOS'} ${String(centavos).padStart(2, '0')}/100 M.N.`
+}

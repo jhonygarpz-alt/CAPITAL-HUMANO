@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Download, Printer } from 'lucide-react'
 import { useStore } from '../store/Store'
 import { Badge, PageHeader, Select, Table, Input } from '../components/ui'
@@ -13,7 +14,8 @@ interface Reporte { id: string; titulo: string; desc: string; filas: Fila[] }
 export default function Reportes() {
   const { db, empresa } = useStore()
   const [alcance, setAlcance] = useState<'actual' | 'todas'>('actual')
-  const [id, setId] = useState('plantilla')
+  const [sp] = useSearchParams()
+  const [id, setId] = useState(sp.get('r') || 'plantilla')
   const [desde, setDesde] = useState(hoy().slice(0, 5) + '01-01')
   const [hasta, setHasta] = useState(hoy())
 

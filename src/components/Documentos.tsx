@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { CheckCircle2, Circle, Download, Eye, FileText, Loader2, Trash2, Upload } from 'lucide-react'
 import { useStore } from '../store/Store'
 import { DOCUMENTOS_REQUERIDOS, TIPOS_DOCUMENTO, type Colaborador, type Documento } from '../types'
-import { fmtFecha, fmtTamano, hoy, nombreCompleto, uid } from '../lib/utils'
+import { diffDays, fmtFecha, fmtTamano, hoy, nombreCompleto, uid } from '../lib/utils'
 import { supabase, BUCKET } from '../lib/supabase'
 import { Empty, Field, Input, Modal, Progress, Select, Textarea, confirmar } from './ui'
 import { ColaboradorSelect } from './ColaboradorSelect'
@@ -59,9 +59,10 @@ export function SubirDocumento({ open, onClose, colaboradorId, tipo }: { open: b
           <span className="text-xs text-slate-400">PDF, imagen o documento · máx. {MAX_MB} MB (opcional)</span>
           <input type="file" className="hidden" accept=".pdf,image/*,.doc,.docx,.xls,.xlsx" onChange={(e) => archivo(e.target.files?.[0])} />
         </label>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-3">
           <Field label="Nombre"><Input value={d.nombre} onChange={(e) => setD({ ...d, nombre: e.target.value })} placeholder={d.tipo} /></Field>
           <Field label="Fecha"><Input type="date" value={d.fecha} onChange={(e) => setD({ ...d, fecha: e.target.value })} /></Field>
+          <Field label="Vence (opcional)" hint="Para recibir aviso antes de que venza"><Input type="date" value={d.vencimiento ?? ''} onChange={(e) => setD({ ...d, vencimiento: e.target.value || undefined })} /></Field>
         </div>
         <Field label="Notas"><Textarea value={d.notas ?? ''} onChange={(e) => setD({ ...d, notas: e.target.value })} /></Field>
         {error && <p className="text-sm text-rose-600">{error}</p>}
@@ -118,6 +119,7 @@ export function ExpedienteColaborador({ c }: { c: Colaborador }) {
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium">{t}</div>
                 <div className="text-xs text-slate-500">{doc ? `${doc.nombre} · ${fmtFecha(doc.fecha)}` : 'Pendiente de entregar'}</div>
+                {doc?.vencimiento && <Vencimiento fecha={doc.vencimiento} />}
               </div>
               {doc ? (
                 <div className="flex gap-1">
@@ -149,6 +151,7 @@ export function ListaDocumentos({ docs, mostrarColaborador, onAgregar }: { docs:
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm font-medium">{d.nombre}</div>
               <div className="truncate text-xs text-slate-500">{d.tipo}{mostrarColaborador && c ? ` · ${nombreCompleto(c)}` : ''} · {fmtFecha(d.fecha)} {d.tamano ? `· ${fmtTamano(d.tamano)}` : ''}</div>
+              {d.vencimiento && <Vencimiento fecha={d.vencimiento} />}
             </div>
             {tieneArchivo(d) && <>
               <button className="btn-ghost" onClick={() => abrirDocumento(d)} aria-label="Ver"><Eye size={16} /></button>
@@ -160,4 +163,10 @@ export function ListaDocumentos({ docs, mostrarColaborador, onAgregar }: { docs:
       })}
     </div>
   )
+}
+
+function Vencimiento({ fecha }: { fecha: string }) {
+  const n = diffDays(hoy(), fecha)
+  const cls = n < 0 ? 'bg-rose-50 text-rose-700' : n <= 30 ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'
+  return <span className={`mt-0.5 inline-block rounded px-1.5 py-0.5 text-[11px] font-semibold ${cls}`}>{n < 0 ? `Vencido el ${fmtFecha(fecha)}` : `Vence ${fmtFecha(fecha)}${n <= 30 ? ` · en ${n} días` : ''}`}</span>
 }

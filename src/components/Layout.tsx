@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
-  Home, Users, FolderOpen, FileText, Wallet, CalendarDays, Umbrella, AlertTriangle, BarChart3, Settings, Menu, Search, Bell, X, HelpCircle, Briefcase, ChevronDown, ChevronRight, LogOut, Cloud, CloudOff, Loader2,
+  Home, Users, FolderOpen, FileText, Wallet, CalendarDays, Umbrella, AlertTriangle, BarChart3, Settings, Menu, Search, Bell, X, HelpCircle, Briefcase, Gift, Stamp, ChevronDown, ChevronRight, LogOut, Cloud, CloudOff, Loader2, Lock, Eye, Cake, FileWarning, Award,
 } from 'lucide-react'
 import { useStore } from '../store/Store'
 import { cx, Avatar } from './ui'
 import { Marca, LogoOptima } from './Marca'
-import { estadoContrato, nombreCompleto, normalizar } from '../lib/utils'
+import { nombreCompleto, normalizar } from '../lib/utils'
+import { calcularAvisos, type TipoAviso } from '../lib/avisos'
+import { moduloDeRuta, MODULOS } from '../lib/permisos'
 
 const NAV = [
   { to: '/', label: 'Inicio', icon: Home, end: true },
@@ -14,9 +16,11 @@ const NAV = [
   { to: '/expedientes', label: 'Expedientes', icon: FolderOpen },
   { to: '/contratos', label: 'Contratos', icon: FileText },
   { to: '/nomina', label: 'Nómina', icon: Wallet },
+  { to: '/aguinaldos', label: 'Aguinaldos', icon: Gift },
   { to: '/asistencias', label: 'Asistencias', icon: CalendarDays },
   { to: '/vacaciones', label: 'Vacaciones', icon: Umbrella },
   { to: '/incidencias', label: 'Incidencias', icon: AlertTriangle },
+  { to: '/constancias', label: 'Constancias', icon: Stamp },
   { to: '/vacantes', label: 'Vacantes', icon: Briefcase },
   { to: '/reportes', label: 'Reportes', icon: BarChart3 },
 ]
@@ -27,6 +31,8 @@ const NAV_FIN = [
 const TITULOS: Record<string, string> = Object.fromEntries([...NAV, ...NAV_FIN].map((n) => [n.to.slice(1), n.label]))
 
 function Sidebar({ expandido, onNavigate }: { expandido: boolean; onNavigate?: () => void }) {
+  const { puede } = useStore()
+  const visible = (n: (typeof NAV)[number]) => { const m = moduloDeRuta(n.to); return !m || puede(m) }
   const item = ({ to, label, icon: Icon, end }: (typeof NAV)[number]) => (
     <NavLink key={to} to={to} end={end} onClick={onNavigate} title={expandido ? undefined : label}
       className={({ isActive }) => cx('flex items-center gap-3 py-3 text-[15px] font-medium transition', expandido ? 'mx-2 rounded-lg px-3' : 'justify-center',
@@ -36,8 +42,8 @@ function Sidebar({ expandido, onNavigate }: { expandido: boolean; onNavigate?: (
   )
   return (
     <div className="flex h-full flex-col py-3">
-      <nav className="flex-1 space-y-1 overflow-y-auto">{NAV.map(item)}</nav>
-      <div className={cx('space-y-1 border-t border-white/20 pt-3', expandido ? 'mx-3' : 'mx-4')}>{NAV_FIN.map(item)}</div>
+      <nav className="flex-1 space-y-1 overflow-y-auto">{NAV.filter(visible).map(item)}</nav>
+      <div className={cx('space-y-1 border-t border-white/20 pt-3', expandido ? 'mx-3' : 'mx-4')}>{NAV_FIN.filter(visible).map(item)}</div>
     </div>
   )
 }
@@ -92,36 +98,41 @@ function BuscadorGlobal({ oscuro }: { oscuro?: boolean }) {
   )
 }
 
+const ICONO_AVISO: Record<TipoAviso, typeof Bell> = {
+  primaVacacional: Wallet, cumpleanos: Cake, documentos: FileWarning, contratos: FileText, aniversarios: Award, vacacionesPendientes: Umbrella, incidenciasPendientes: AlertTriangle,
+}
+
 function Notificaciones() {
-  const { deEmpresa } = useStore()
+  const { db, empresa, puede } = useStore()
   const nav = useNavigate()
   const [open, setOpen] = useState(false)
   const ref = useClickFuera(() => setOpen(false))
-  const avisos = useMemo(() => {
-    const a: { texto: string; to: string }[] = []
-    const vac = deEmpresa('vacaciones').filter((v) => v.estatus === 'Pendiente').length
-    if (vac) a.push({ texto: `${vac} solicitud(es) de vacaciones por aprobar`, to: '/vacaciones' })
-    const inc = deEmpresa('incidencias').filter((i) => i.estatus === 'Pendiente').length
-    if (inc) a.push({ texto: `${inc} incidencia(s) pendientes de aplicar`, to: '/incidencias' })
-    const cont = deEmpresa('contratos').filter((c) => ['Por vencer', 'Vencido'].includes(estadoContrato(c))).length
-    if (cont) a.push({ texto: `${cont} contrato(s) por vencer o vencidos`, to: '/contratos' })
-    const vacantes = deEmpresa('vacantes').filter((v) => v.estatus === 'Abierta' && v.candidatos === 0).length
-    if (vacantes) a.push({ texto: `${vacantes} vacante(s) abiertas sin candidatos`, to: '/vacantes' })
-    return a
-  }, [deEmpresa])
+  const avisos = useMemo(() => calcularAvisos(db, empresa), [db, empresa])
+  const urgentes = avisos.filter((a) => a.urgente).length
   return (
     <div ref={ref} className="relative">
       <button className="relative rounded-lg p-2 text-white transition hover:bg-white/10" onClick={() => setOpen(!open)} aria-label="Notificaciones">
         <Bell size={24} strokeWidth={1.8} />
-        {avisos.length > 0 && <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full border-2 border-primary-600 bg-accent-500" />}
+        {avisos.length > 0 && <span className={cx('absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-primary-600 px-1 text-[10px] font-bold', urgentes ? 'bg-rose-500 text-white' : 'bg-accent-500 text-primary-900')}>{avisos.length > 99 ? '99+' : avisos.length}</span>}
       </button>
       {open && (
-        <Desplegable className="right-0 w-72">
-          <div className="bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white">Pendientes</div>
-          {avisos.length === 0 && <div className="px-4 py-3 text-sm text-slate-500">Todo al día ✅</div>}
-          {avisos.map((a) => (
-            <button key={a.to} className="block w-full border-b border-slate-100 px-4 py-2.5 text-left text-sm hover:bg-accent-50" onClick={() => { nav(a.to); setOpen(false) }}>{a.texto}</button>
-          ))}
+        <Desplegable className="right-0 w-[22rem] max-w-[calc(100vw-1.5rem)]">
+          <div className="flex items-center justify-between bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white">
+            <span>Notificaciones ({avisos.length})</span>
+            {puede('configuracion', 'editar') && <button className="text-xs font-medium text-accent-300 hover:underline" onClick={() => { nav('/configuracion?tab=notificaciones'); setOpen(false) }}>Configurar</button>}
+          </div>
+          <div className="max-h-[60vh] overflow-y-auto">
+            {avisos.length === 0 && <div className="px-4 py-6 text-center text-sm text-slate-500">Todo al día ✅</div>}
+            {avisos.map((a) => {
+              const Icon = ICONO_AVISO[a.tipo]
+              return (
+                <button key={a.id} className="flex w-full gap-3 border-b border-slate-100 px-4 py-2.5 text-left hover:bg-accent-50" onClick={() => { nav(a.to); setOpen(false) }}>
+                  <span className={cx('mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', a.urgente ? 'bg-rose-100 text-rose-600' : 'bg-accent-100 text-primary-700')}><Icon size={16} /></span>
+                  <span className="min-w-0"><span className="block text-sm font-semibold text-primary-900">{a.titulo}</span><span className="block text-xs text-slate-500">{a.detalle}</span></span>
+                </button>
+              )
+            })}
+          </div>
         </Desplegable>
       )}
     </div>
@@ -149,7 +160,7 @@ function MenuUsuario() {
           <div className="border-b border-slate-100 px-4 py-3">
             <div className="truncate font-semibold">{nombre}</div>
             <div className="truncate text-xs text-slate-500">{usuario.email}</div>
-            <div className="mt-1 text-xs font-semibold text-accent-700">{usuario.rol === 'admin' ? 'Administrador' : 'Usuario'}</div>
+            <div className="mt-1 text-xs font-semibold text-accent-700">{usuario.rolNombre ?? usuario.rol}</div>
           </div>
           <button className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-primary-50" onClick={() => { nav('/configuracion'); setOpen(false) }}><Settings size={16} /> Configuración</button>
           <button className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-rose-600 hover:bg-rose-50" onClick={cerrarSesion}><LogOut size={16} /> Cerrar sesión</button>
@@ -176,6 +187,8 @@ function MigasDePan() {
     const c = db.colaboradores.find((x) => x.id === partes[1])
     const tab = new URLSearchParams(loc.search).get('tab')
     migas.push({ label: tab ? ({ general: 'Información', expediente: 'Expediente', documentos: 'Documentos', contratos: 'Contratos', vacaciones: 'Vacaciones', incidencias: 'Incidencias', nomina: 'Nómina', historial: 'Historial' } as Record<string, string>)[tab] ?? 'Ficha' : c ? nombreCompleto(c) : 'Ficha' })
+  } else if (partes[0] === 'aguinaldos' && partes[1]) {
+    migas.push({ label: db.aguinaldos.find((n) => n.id === partes[1])?.nombre ?? 'Detalle' })
   } else if (partes[0] === 'nomina' && partes[1]) {
     migas.push({ label: db.nominas.find((n) => n.id === partes[1])?.nombre ?? 'Detalle' })
   }
@@ -190,6 +203,35 @@ function MigasDePan() {
         </span>
       ))}
     </nav>
+  )
+}
+
+/** Muestra la página solo si el rol tiene acceso; si es de consulta, avisa. */
+function Protegido({ children }: { children: ReactNode }) {
+  const { puede } = useStore()
+  const loc = useLocation()
+  const m = moduloDeRuta(loc.pathname)
+  if (!m) return <>{children}</>
+  const nombre = MODULOS.find((x) => x.id === m)?.label ?? m
+  if (!puede(m)) {
+    return (
+      <div className="card mx-auto mt-10 max-w-lg border-t-4 border-t-amber-500 p-8 text-center">
+        <Lock className="mx-auto mb-3 text-amber-500" size={36} />
+        <h2 className="text-xl font-bold text-primary-700">Sin acceso a {nombre}</h2>
+        <p className="mt-2 text-sm text-slate-600">Tu rol no incluye este módulo. Si lo necesitas, pide a un administrador que ajuste tus permisos en Configuración → Usuarios y permisos.</p>
+        <Link to="/" className="btn-primary mt-5">Ir al inicio</Link>
+      </div>
+    )
+  }
+  return (
+    <>
+      {!puede(m, 'editar') && (
+        <div className="no-print mb-4 flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+          <Eye size={16} className="shrink-0" /> <span><b>Solo consulta:</b> tu rol permite ver {nombre}, pero no modificar.</span>
+        </div>
+      )}
+      {children}
+    </>
   )
 }
 
@@ -248,7 +290,7 @@ export default function Layout() {
       )}
       <div className={cx('transition-[padding]', expandido ? 'lg:pl-[240px]' : 'lg:pl-[84px]')}>
         <div className="no-print border-b border-slate-200 bg-white px-4 py-2 md:hidden"><BuscadorGlobal /></div>
-        <main className="mx-auto max-w-[1440px] p-4 sm:p-6"><MigasDePan /><Outlet /></main>
+        <main className="mx-auto max-w-[1440px] p-4 sm:p-6"><MigasDePan /><Protegido><Outlet /></Protegido></main>
       </div>
     </div>
   )

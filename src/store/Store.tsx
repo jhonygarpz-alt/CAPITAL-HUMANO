@@ -5,12 +5,13 @@ import { supabase, BUCKET, guardarEmpresasConocidas } from '../lib/supabase'
 import { crearDBDemo, crearDBVacia } from './seed'
 import { uid } from '../lib/utils'
 import { Login, SinAcceso, Cargando, Bienvenida } from '../components/Acceso'
+import { moduloDe, permisosDe, type Modulo, type Nivel, type Permisos, type Rol } from '../lib/permisos'
 
 type Item<K extends Coleccion> = DB[K][number]
 type Evento = { accion: string; colaboradorId?: ID; modulo?: string }
 type EstadoSync = 'ok' | 'guardando' | 'error'
 
-export interface Miembro { user_id: string; email: string; nombre: string | null; rol: 'admin' | 'usuario' }
+export interface Miembro { user_id: string; email: string; nombre: string | null; rol: string; activo?: boolean; rolNombre?: string; permisos: Permisos }
 
 interface StoreValue {
   db: DB
@@ -24,14 +25,18 @@ interface StoreValue {
   usuario: Miembro
   sync: EstadoSync
   cerrarSesion: () => void
+  /** ¿El usuario tiene al menos este nivel en el módulo? */
+  puede: (modulo: Modulo, nivel?: Exclude<Nivel, 'ninguno'>) => boolean
+  /** Vuelve a leer el rol y permisos del usuario */
+  refrescarPermisos: () => void
 }
 
 const Ctx = createContext<StoreValue | null>(null)
 
-export const COLECCIONES: Coleccion[] = ['empresas', 'colaboradores', 'documentos', 'contratos', 'vacaciones', 'vacantes', 'asistencias', 'incidencias', 'nominas', 'eventos']
+export const COLECCIONES: Coleccion[] = ['empresas', 'colaboradores', 'documentos', 'contratos', 'vacaciones', 'vacantes', 'constancias', 'aguinaldos', 'ajustes', 'asistencias', 'incidencias', 'nominas', 'eventos']
 
 const MODULOS: Partial<Record<Coleccion, string>> = {
-  colaboradores: 'Colaboradores', documentos: 'Expedientes', contratos: 'Contratos', vacaciones: 'Vacaciones', vacantes: 'Vacantes',
+  colaboradores: 'Colaboradores', documentos: 'Expedientes', contratos: 'Contratos', vacaciones: 'Vacaciones', vacantes: 'Vacantes', constancias: 'Constancias', aguinaldos: 'Aguinaldos', ajustes: 'Configuración',
   asistencias: 'Asistencias', incidencias: 'Incidencias', nominas: 'Nómina', empresas: 'Configuración',
 }
 
@@ -106,7 +111,7 @@ function aplicarRemoto(db: DB, col: Coleccion, tipo: string, item: { id: string 
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null | undefined>(undefined)
-  const [acceso, setAcceso] = useState<'pendiente' | 'ok' | 'sin_invitacion'>('pendiente')
+  const [acceso, setAcceso] = useState<'pendiente' | 'ok' | 'sin_invitacion' | 'inactivo'>('pendiente')
   const [usuario, setUsuario] = useState<Miembro | null>(null)
   const [db, setDb] = useState<DB | null>(null)
   const [error, setError] = useState('')
@@ -123,14 +128,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // Acceso y carga de datos
   const uidSesion = session?.user.id
+  const permisosRef = useRef<Permisos | null>(null)
+  const cargarUsuario = useCallback(async () => {
+    if (!uidSesion) return false
+    const { data: m, error: e } = await supabase.from('rh_miembros').select('user_id,email,nombre,rol,activo').eq('user_id', uidSesion).single()
+    if (e || !m) { setError(e?.message ?? 'No se encontró tu usuario'); return false }
+    const { data: rol } = await supabase.from('rh_roles').select('id,nombre,descripcion,permisos,sistema').eq('id', m.rol).maybeSingle()
+    const permisos = permisosDe(m.rol, rol as Rol | null)
+    permisosRef.current = permisos
+    setUsuario({ ...(m as Omit<Miembro, 'permisos'>), rolNombre: (rol as Rol | null)?.nombre ?? m.rol, permisos })
+    return true
+  }, [uidSesion])
   const verificar = useCallback(async () => {
     if (!uidSesion) return
     setError('')
     const { data: r, error: e1 } = await supabase.rpc('rh_reclamar_acceso')
     if (e1) return setError(e1.message)
+    if (r === 'inactivo') return setAcceso('inactivo')
     if (r !== 'ok') return setAcceso('sin_invitacion')
-    const { data: m } = await supabase.from('rh_miembros').select('user_id,email,nombre,rol').eq('user_id', uidSesion).single()
-    setUsuario(m as Miembro)
+    if (!(await cargarUsuario())) return
     setAcceso('ok')
     try {
       const d = await cargarTodo()
@@ -140,7 +156,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       setError((e as Error).message)
     }
-  }, [uidSesion])
+  }, [uidSesion, cargarUsuario])
 
   useEffect(() => {
     if (!uidSesion) { setDb(null); setUsuario(null); setAcceso('pendiente'); sincronizado.current = null; return }
@@ -192,7 +208,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return { ...next, eventos: [...next.eventos, { id: uid(), empresaId: prev.empresaActualId || next.empresas[0]?.id || '', colaboradorId: evento.colaboradorId, fecha: new Date().toISOString().slice(0, 16), modulo: evento.modulo ?? (col && MODULOS[col]) ?? '', accion: evento.accion }] }
   }
 
+  const sinPermiso = (col: Coleccion) => {
+    const m = moduloDe(col)
+    if (!m || !permisosRef.current || permisosRef.current[m] === 'editar') return false
+    alert('Tu rol solo permite consultar esta información. Pide a un administrador el permiso de edición.')
+    return true
+  }
+
   const guardarItem = useCallback<StoreValue['guardarItem']>((col, item, evento) => {
+    if (sinPermiso(col)) return
     setDb((prev) => {
       if (!prev) return prev
       const lista = prev[col] as { id: ID }[]
@@ -203,14 +227,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const eliminarItem = useCallback<StoreValue['eliminarItem']>((col, id, evento) => {
+    if (sinPermiso(col)) return
     setDb((prev) => {
       if (!prev) return prev
       const next = { ...prev, [col]: (prev[col] as { id: ID }[]).filter((x) => x.id !== id) } as DB
       // Eliminación en cascada de la información relacionada
-      const relacionadas = ['documentos', 'contratos', 'vacaciones', 'asistencias', 'incidencias', 'eventos'] as const
+      const relacionadas = ['documentos', 'contratos', 'vacaciones', 'asistencias', 'incidencias', 'constancias', 'eventos'] as const
       const mut = next as unknown as Record<string, unknown>
       if (col === 'colaboradores') for (const r of relacionadas) mut[r] = (next[r] as { colaboradorId?: ID }[]).filter((x) => x.colaboradorId !== id)
-      if (col === 'empresas') for (const r of [...relacionadas, 'colaboradores', 'nominas', 'vacantes'] as const) mut[r] = (next[r] as { empresaId: ID }[]).filter((x) => x.empresaId !== id)
+      if (col === 'empresas') for (const r of [...relacionadas, 'colaboradores', 'nominas', 'vacantes', 'aguinaldos'] as const) mut[r] = (next[r] as { empresaId: ID }[]).filter((x) => x.empresaId !== id)
       return registrar(prev, next, evento, col)
     })
   }, [])
@@ -224,18 +249,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setEmpresa: (id) => { guardarPref(id); setDb((p) => (p ? { ...p, empresaActualId: id } : p)) },
       guardarItem,
       eliminarItem,
-      reemplazarDB: (d) => setDb({ ...dbVacia(), ...d, vacantes: d.vacantes ?? [], empresaActualId: d.empresaActualId || d.empresas[0]?.id || '' }),
+      reemplazarDB: (d) => setDb({ ...dbVacia(), ...d, vacantes: d.vacantes ?? [], constancias: d.constancias ?? [], aguinaldos: d.aguinaldos ?? [], ajustes: d.ajustes ?? [], empresaActualId: d.empresaActualId || d.empresas[0]?.id || '' }),
       deEmpresa: (col) => (db[col] as { empresaId: ID }[]).filter((x) => x.empresaId === empresa.id) as never,
       usuario,
       sync,
       cerrarSesion: () => { supabase.auth.signOut() },
+      puede: (modulo, nivel = 'ver') => { const n = usuario.permisos[modulo]; return nivel === 'ver' ? n !== 'ninguno' : n === 'editar' },
+      refrescarPermisos: () => { cargarUsuario() },
     }
-  }, [db, usuario, sync, guardarItem, eliminarItem])
+  }, [db, usuario, sync, guardarItem, eliminarItem, cargarUsuario])
 
   if (session === undefined) return <Cargando />
   if (!session) return <Login />
   if (error) return <Cargando error={error} onReintentar={verificar} />
-  if (acceso === 'sin_invitacion') return <SinAcceso email={session.user.email ?? ''} onReintentar={verificar} />
+  if (acceso === 'sin_invitacion' || acceso === 'inactivo') return <SinAcceso email={session.user.email ?? ''} inactivo={acceso === 'inactivo'} onReintentar={verificar} />
   if (!db) return <Cargando texto="Cargando información…" />
   if (!value) {
     return <Bienvenida esAdmin={usuario?.rol === 'admin'} onDemo={() => setDb({ ...crearDBDemo(), empresaActualId: 'emp-a' })} onVacia={() => setDb({ ...crearDBVacia() })} />

@@ -29,10 +29,10 @@ const TONOS = {
 }
 export type Tono = keyof typeof TONOS
 
-export function StatCard({ icon, value, label, tono = 'navy', onClick }: { icon: ReactNode; value: ReactNode; label: string; tono?: Tono; onClick?: () => void }) {
+export function StatCard({ icon, value, label, tono = 'navy', onClick, compacto }: { icon: ReactNode; value: ReactNode; label: string; tono?: Tono; onClick?: () => void; compacto?: boolean }) {
   return (
     <button type="button" onClick={onClick} disabled={!onClick}
-      className="card flex items-center gap-4 border-b-4 border-b-accent-500 p-4 text-left transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-md disabled:cursor-default sm:p-5">
+      className={cx('card flex border-b-4 border-b-accent-500 p-4 text-left transition enabled:hover:-translate-y-0.5 enabled:hover:shadow-md disabled:cursor-default', compacto ? 'flex-col items-start gap-2' : 'items-center gap-4 sm:p-5')}>
       <div className={cx('flex h-12 w-12 shrink-0 items-center justify-center rounded-lg shadow-sm', TONOS[tono])}>{icon}</div>
       <div className="min-w-0">
         <div className="truncate text-2xl font-extrabold leading-tight text-primary-700 sm:text-[28px]">{value}</div>
