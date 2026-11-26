@@ -85,7 +85,7 @@ export default function Configuracion() {
   const { db, empresa, setEmpresa, eliminarItem, reemplazarDB, usuario } = useStore()
   const [edit, setEdit] = useState<Empresa | null>(null)
 
-  const nueva = (): Empresa => ({ id: uid(), nombre: '', razonSocial: '', rfc: '', registroPatronal: '', direccion: '', color: '#5b2ff5', departamentos: ['Recursos Humanos', 'Administración'], periodicidadNomina: 'Quincenal' })
+  const nueva = (): Empresa => ({ id: uid(), nombre: '', razonSocial: '', rfc: '', registroPatronal: '', direccion: '', color: '#064467', departamentos: ['Recursos Humanos', 'Administración'], periodicidadNomina: 'Quincenal' })
   const borrar = (e: Empresa) => {
     if (db.empresas.length === 1) return alert('Debe existir al menos una empresa.')
     const n = db.colaboradores.filter((c) => c.empresaId === e.id).length

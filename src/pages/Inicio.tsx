@@ -41,7 +41,7 @@ export default function Inicio() {
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <StatCard icon={<Users size={22} />} value={activos.length} label="Colaboradores" tono="blue" onClick={() => nav('/colaboradores')} />
             <StatCard icon={<UserPlus size={22} />} value={altasMes} label="Altas del mes" tono="green" onClick={() => nav('/reportes')} />
-            <StatCard icon={<CalendarDays size={22} />} value={vacantes} label="Vacantes" tono="violet" onClick={() => nav('/vacantes')} />
+            <StatCard icon={<CalendarDays size={22} />} value={vacantes} label="Vacantes" tono="navy" onClick={() => nav('/vacantes')} />
             <StatCard icon={<CalendarX size={22} />} value={incPend} label="Incidencias" tono="red" onClick={() => nav('/incidencias')} />
           </div>
 
@@ -52,7 +52,7 @@ export default function Inicio() {
             {tab === 'colaboradores' && (recientes.length === 0 ? <Empty title="Aún no hay colaboradores" action={<button className="btn-primary" onClick={() => setNuevo(true)}>Registrar el primero</button>} /> : (
               <Table head={<><th className="th">Colaborador</th><th className="th">Puesto</th><th className="th hidden md:table-cell">Empresa</th><th className="th hidden 2xl:table-cell">Expediente</th><th className="th">Estatus</th><th className="th" /></>}>
                 {recientes.slice(0, 8).map((c) => (
-                  <tr key={c.id} className={cx('cursor-pointer transition hover:bg-white/60', seleccionado?.id === c.id && 'bg-primary-50/70')} onClick={() => setSel(c.id)} onDoubleClick={() => nav(`/colaboradores/${c.id}`)}>
+                  <tr key={c.id} className={cx('cursor-pointer transition hover:bg-accent-50', seleccionado?.id === c.id && 'bg-accent-100/70')} onClick={() => setSel(c.id)} onDoubleClick={() => nav(`/colaboradores/${c.id}`)}>
                     <td className="td"><div className="flex items-center gap-3"><Avatar c={c} size={38} /><span className="font-semibold text-slate-900">{nombreCompleto(c)}</span></div></td>
                     <td className="td">{c.puesto}</td>
                     <td className="td hidden md:table-cell">{empresa.nombre}</td>

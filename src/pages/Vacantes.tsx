@@ -39,7 +39,7 @@ export default function Vacantes() {
         {filas.length === 0 ? <Empty title="Sin vacantes" text="Registra las posiciones que necesitas cubrir." action={<button className="btn-primary" onClick={() => setForm({})}><Plus size={16} /> Nueva vacante</button>} /> : (
           <Table head={<><th className="th">Puesto</th><th className="th hidden md:table-cell">Departamento</th><th className="th">Posiciones</th><th className="th">Candidatos</th><th className="th hidden lg:table-cell">Salario diario</th><th className="th hidden lg:table-cell">Abierta</th><th className="th">Estatus</th><th className="th" /></>}>
             {filas.map((v) => (
-              <tr key={v.id} className="hover:bg-white/60">
+              <tr key={v.id} className="hover:bg-accent-50">
                 <td className="td font-semibold text-slate-900">{v.puesto}</td>
                 <td className="td hidden md:table-cell">{v.departamento}</td>
                 <td className="td">{v.posiciones}</td>

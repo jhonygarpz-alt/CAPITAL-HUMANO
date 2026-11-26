@@ -6,7 +6,7 @@ const DEPTOS = ['Recursos Humanos', 'Administración', 'Finanzas', 'Ventas', 'Op
 
 export function crearDBDemo(): DB {
   const empresas: Empresa[] = [
-    { id: 'emp-a', nombre: 'Empresa A', razonSocial: 'Comercializadora Empresa A, S.A. de C.V.', rfc: 'CEA190101AB1', registroPatronal: 'Y1234567101', direccion: 'Av. Reforma 120, CDMX', color: '#5b2ff5', departamentos: DEPTOS, periodicidadNomina: 'Quincenal' },
+    { id: 'emp-a', nombre: 'Empresa A', razonSocial: 'Comercializadora Empresa A, S.A. de C.V.', rfc: 'CEA190101AB1', registroPatronal: 'Y1234567101', direccion: 'Av. Reforma 120, CDMX', color: '#064467', departamentos: DEPTOS, periodicidadNomina: 'Quincenal' },
     { id: 'emp-b', nombre: 'Empresa B', razonSocial: 'Servicios Industriales B, S.A. de C.V.', rfc: 'SIB180515CD2', registroPatronal: 'Y7654321102', direccion: 'Blvd. Industrial 45, Monterrey, N.L.', color: '#0ea5e9', departamentos: ['Recursos Humanos', 'Producción', 'Calidad', 'Logística', 'Mantenimiento'], periodicidadNomina: 'Semanal' },
     { id: 'emp-c', nombre: 'Empresa C', razonSocial: 'Grupo Corporativo C, S.C.', rfc: 'GCC200301EF3', registroPatronal: 'Y1122334103', direccion: 'Av. Vallarta 3000, Guadalajara, Jal.', color: '#10b981', departamentos: ['Dirección', 'Recursos Humanos', 'Contabilidad', 'Jurídico'], periodicidadNomina: 'Quincenal' },
   ]
@@ -139,7 +139,7 @@ export function crearDBDemo(): DB {
 export function crearDBVacia(): DB {
   return {
     version: 1, empresaActualId: 'emp-1',
-    empresas: [{ id: 'emp-1', nombre: 'Mi empresa', razonSocial: '', rfc: '', registroPatronal: '', direccion: '', color: '#5b2ff5', departamentos: ['Recursos Humanos', 'Administración'], periodicidadNomina: 'Quincenal' }],
+    empresas: [{ id: 'emp-1', nombre: 'Mi empresa', razonSocial: '', rfc: '', registroPatronal: '', direccion: '', color: '#064467', departamentos: ['Recursos Humanos', 'Administración'], periodicidadNomina: 'Quincenal' }],
     colaboradores: [], documentos: [], contratos: [], vacaciones: [], vacantes: [], asistencias: [], incidencias: [], nominas: [], eventos: [],
   }
 }

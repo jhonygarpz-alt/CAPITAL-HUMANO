@@ -60,7 +60,7 @@ export default function Colaboradores() {
             <Table head={<><th className="th">Colaborador</th><th className="th">Puesto</th><th className="th hidden md:table-cell">Departamento</th><th className="th hidden 2xl:table-cell">Empresa</th><th className="th hidden lg:table-cell">Ingreso</th><th className="th">Estatus</th><th className="th" /></>}>
               {lista.map((c) => (
                 <tr key={c.id} onClick={() => setSel(c.id)} onDoubleClick={() => nav(`/colaboradores/${c.id}`)}
-                  className={cx('cursor-pointer transition hover:bg-white/60', seleccionado?.id === c.id && 'bg-primary-50/70')}>
+                  className={cx('cursor-pointer transition hover:bg-accent-50', seleccionado?.id === c.id && 'bg-accent-100/70')}>
                   <td className="td">
                     <div className="flex items-center gap-3">
                       <Avatar c={c} size={36} />
@@ -97,7 +97,7 @@ export function AccionesFila({ c }: { c: Colaborador }) {
     <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
       <button className="btn-ghost" onClick={() => setOpen(!open)} onBlur={() => setTimeout(() => setOpen(false), 150)} aria-label="Acciones"><MoreHorizontal size={20} /></button>
       {open && (
-        <div className="absolute right-0 top-full z-30 mt-1 w-48 overflow-hidden rounded-xl border border-primary-200 bg-white/95 py-1 text-left shadow-xl backdrop-blur-xl">
+        <div className="absolute right-0 top-full z-30 mt-1 w-48 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 text-left shadow-xl backdrop-blur-xl">
           {[['Ver ficha', undefined], ['Expediente', 'expediente'], ['Contratos', 'contratos'], ['Vacaciones', 'vacaciones'], ['Incidencias', 'incidencias'], ['Historial', 'historial']].map(([l, t]) => (
             <button key={l} className="block w-full px-4 py-2 text-left text-sm hover:bg-primary-50" onMouseDown={(e) => e.preventDefault()} onClick={() => ir(t)}>{l}</button>
           ))}
@@ -115,16 +115,16 @@ export function PanelColaborador({ c, activo }: { c: Colaborador; activo?: strin
     { tab: 'historial', label: 'Historial', icon: History },
   ]
   return (
-    <aside className="card-glow h-fit p-5 xl:sticky xl:top-24">
-      <div className="flex items-center gap-4">
-        <Avatar c={c} size={104} cuadrado />
+    <aside className="card h-fit overflow-hidden p-5 pt-0 xl:sticky xl:top-24">
+      <div className="-mx-5 mb-1 flex items-center gap-4 border-b-[6px] border-accent-500 bg-primary-600 p-5 text-white">
+        <Avatar c={c} size={96} cuadrado />
         <div className="min-w-0">
-          <h3 className="text-lg font-bold leading-snug text-slate-900">{nombreCompleto(c)}</h3>
-          <p className="text-sm text-slate-700">{c.numero}</p>
-          <div className="mt-2"><Badge className="px-3 py-1 text-sm">{c.estatus}</Badge></div>
+          <h3 className="font-marca text-lg font-extrabold leading-snug">{nombreCompleto(c)}</h3>
+          <p className="text-sm text-white/80">{c.numero}</p>
+          <div className="mt-2"><Badge solido className="px-3 py-1 text-sm">{c.estatus}</Badge></div>
         </div>
       </div>
-      <dl className="mt-5 space-y-2 text-sm">
+      <dl className="mt-4 space-y-2 text-sm">
         <div className="flex justify-between gap-2"><dt className="text-slate-500">Puesto</dt><dd className="text-right font-medium">{c.puesto}</dd></div>
         <div className="flex justify-between gap-2"><dt className="text-slate-500">Departamento</dt><dd className="text-right font-medium">{c.departamento}</dd></div>
         <div className="flex justify-between gap-2"><dt className="text-slate-500">Antigüedad</dt><dd className="font-medium">{antiguedadTexto(c.fechaIngreso)}</dd></div>
