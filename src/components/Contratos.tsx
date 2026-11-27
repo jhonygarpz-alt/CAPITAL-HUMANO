@@ -4,6 +4,7 @@ import type { Contrato, TipoContrato } from '../types'
 import { addDays, fmtFechaLarga, fmtMoney, nombreCompleto, uid } from '../lib/utils'
 import { Field, Input, Modal, Select, Textarea } from './ui'
 import { ColaboradorSelect } from './ColaboradorSelect'
+import { logoHtml } from '../lib/plantillas'
 
 const TIPOS: TipoContrato[] = ['Tiempo indeterminado', 'Tiempo determinado', 'Periodo de prueba', 'Capacitación inicial', 'Honorarios']
 
@@ -58,6 +59,7 @@ export function imprimirContrato(k: Contrato, dbCtx: ReturnType<typeof useStore>
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Contrato ${nombreCompleto(c)}</title>
 <style>body{font-family:Georgia,serif;max-width:760px;margin:40px auto;padding:0 24px;line-height:1.6;color:#111}h1{text-align:center;font-size:18px;text-transform:uppercase}h2{font-size:14px;margin-top:24px}p{text-align:justify;font-size:13px}.firmas{display:flex;justify-content:space-between;margin-top:80px;gap:40px}.firmas div{flex:1;border-top:1px solid #000;text-align:center;padding-top:6px;font-size:12px}@media print{button{display:none}}</style></head><body>
 <button onclick="print()" style="float:right;padding:8px 14px">Imprimir / Guardar PDF</button>
+${e.logo ? `<div style="text-align:center;margin-bottom:10px">${logoHtml(e, 64)}</div>` : ''}
 <h1>Contrato individual de trabajo<br>${k.tipo}</h1>
 <p>Contrato que celebran por una parte <b>${e.razonSocial || e.nombre}</b>, con RFC ${e.rfc || '—'} y domicilio en ${e.direccion || '—'}, a quien en lo sucesivo se le denominará "EL PATRÓN", y por la otra <b>${nombreCompleto(c)}</b>, con CURP ${c.curp || '—'}, RFC ${c.rfc || '—'} y domicilio en ${c.direccion || '—'}, a quien se le denominará "EL TRABAJADOR", al tenor de las siguientes:</p>
 <h2>CLÁUSULAS</h2>

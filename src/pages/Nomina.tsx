@@ -8,6 +8,7 @@ import { configDe } from '../lib/aguinaldo'
 import { addDays, descargarCSV, fmtFecha, fmtFechaLarga, fmtMoney, hoy, nombreCompleto, round2, uid } from '../lib/utils'
 import type { ClaveConcepto, Colaborador, ConceptoNomina, DB, PeriodoNomina, Recibo } from '../types'
 import PrestamosPanel from './Prestamos'
+import { logoHtml } from '../lib/plantillas'
 
 function periodoSugerido(tipo: PeriodoNomina['tipo']) {
   const t = hoy()
@@ -467,7 +468,7 @@ export function imprimirRecibos(n: PeriodoNomina, recibos: Recibo[], db: DB) {
     const c = db.colaboradores.find((x) => x.id === r.colaboradorId)
     if (!c) return ''
     const cs = conceptosDe(r)
-    return `<section><header><div><b class="rs">${e.razonSocial || e.nombre}</b><br>RFC ${e.rfc || '—'} · Reg. Pat. ${e.registroPatronal || '—'}<br>${e.direccion || ''}</div><div class="r"><b class="tit">RECIBO DE NÓMINA</b><br>${n.tipo} · ${fmtFecha(n.fechaInicio)} al ${fmtFecha(n.fechaFin)}<br>Fecha de pago: ${fmtFecha(n.fechaFin)}</div></header>
+    return `<section><header><div style="display:flex;gap:12px;align-items:center">${logoHtml(e, 48)}<div><b class="rs">${e.razonSocial || e.nombre}</b><br>RFC ${e.rfc || '—'} · Reg. Pat. ${e.registroPatronal || '—'}<br>${e.direccion || ''}</div></div><div class="r"><b class="tit">RECIBO DE NÓMINA</b><br>${n.tipo} · ${fmtFecha(n.fechaInicio)} al ${fmtFecha(n.fechaFin)}<br>Fecha de pago: ${fmtFecha(n.fechaFin)}</div></header>
 <div class="emp"><div><b>${nombreCompleto(c)}</b><br>No. ${c.numero} · ${c.puesto}<br>${c.departamento}</div><div>RFC: ${c.rfc || '—'}<br>CURP: ${c.curp || '—'}<br>NSS: ${c.nss || '—'}</div><div>Salario diario: ${fmtMoney(r.salarioDiario)}<br>Días pagados: ${r.diasPeriodo - r.diasFalta} de ${r.diasPeriodo}<br>${c.banco ? `${c.banco} · ${c.cuenta}` : ''}</div></div>
 <div class="cols"><table><tr><th>Percepciones</th><th class="r">Importe</th></tr>${filas(cs.filter((x) => x.tipo === 'percepcion'))}<tr class="t"><td>Total percepciones</td><td class="r">${fmtMoney(r.totalPercepciones)}</td></tr></table>
 <table class="d"><tr><th>Deducciones</th><th class="r">Importe</th></tr>${filas(cs.filter((x) => x.tipo === 'deduccion'))}<tr class="t"><td>Total deducciones</td><td class="r">${fmtMoney(r.totalDeducciones)}</td></tr></table></div>

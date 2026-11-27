@@ -168,6 +168,9 @@ export function variablesConstancia({ k, c, e, contrato }: ContextoConstancia): 
   }
 }
 
+/** Logotipo de la empresa para documentos impresos. */
+export const logoHtml = (e: Pick<Empresa, 'logo' | 'nombre'>, alto = 56) => (e.logo ? `<img src="${e.logo}" alt="${esc(e.nombre)}" style="max-height:${alto}px;max-width:${alto * 3}px;object-fit:contain">` : '')
+
 export const rellenar = (texto: string, v: Record<string, string>) => texto.replace(/\{\{(\w+)\}\}/g, (_, n) => v[n] ?? '')
 
 /** Documento HTML completo (membrete, cuerpo y firma) listo para imprimir o guardar como PDF. */
@@ -204,7 +207,7 @@ p{font-size:13.5px;line-height:1.75;text-align:justify;margin:0 0 14px}
 ${opciones.boton ? '<div class="barra"><button onclick="print()">Imprimir / Guardar como PDF</button></div>' : ''}
 <div class="hoja">
   <div class="membrete">
-    <div><div class="rs">${v.empresa_razon_social}</div><div class="dato">RFC: ${v.empresa_rfc} · Registro patronal: ${v.empresa_registro_patronal}<br>${v.empresa_direccion}${e.telefono ? ` · Tel. ${esc(e.telefono)}` : ''}</div></div>
+    <div style="display:flex;gap:14px;align-items:center">${logoHtml(e, 60)}<div><div class="rs">${v.empresa_razon_social}</div><div class="dato">RFC: ${v.empresa_rfc} · Registro patronal: ${v.empresa_registro_patronal}<br>${v.empresa_direccion}${e.telefono ? ` · Tel. ${esc(e.telefono)}` : ''}</div></div></div>
     <div class="folio">${en ? 'Reference' : 'Folio'}: <b>${v.folio}</b></div>
   </div>
   <div class="acento"></div>

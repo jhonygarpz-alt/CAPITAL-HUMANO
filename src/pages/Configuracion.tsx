@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { BellRing, Building2, DatabaseBackup, Download, Gift, Plus, RotateCcw, Trash2, Upload, Users, X } from 'lucide-react'
+import { BellRing, Building2, ImagePlus, DatabaseBackup, Download, Gift, Plus, Trash2, Upload, Users, X } from 'lucide-react'
 import { useStore } from '../store/Store'
 import { Field, Input, Modal, PageHeader, Seccion, Select, Tabs, confirmar } from '../components/ui'
 import type { DB, Empresa } from '../types'
-import { descargarArchivo, hoy, uid } from '../lib/utils'
-import { crearDBDemo, crearDBVacia } from '../store/seed'
+import { descargarArchivo, hoy, redimensionarLogo, uid } from '../lib/utils'
+import { LogoEmpresa } from '../components/Marca'
+import { crearDBVacia } from '../store/seed'
 import UsuariosPermisos from './config/UsuariosPermisos'
 import NotificacionesConfig from './config/NotificacionesConfig'
 import PrimaConfig from './config/PrimaConfig'
@@ -69,10 +70,11 @@ function Empresas() {
           return (
             <div key={e.id} className={`rounded-xl border-2 p-4 ${e.id === empresa.id ? 'border-accent-500 bg-accent-50/40' : 'border-slate-200'}`}>
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg text-white" style={{ background: e.color }}><Building2 size={18} /></div>
+                <LogoEmpresa empresa={e} size={48} />
                 <div className="min-w-0 flex-1"><div className="font-bold text-primary-800">{e.nombre}</div><div className="truncate text-xs text-slate-500">{e.razonSocial || 'Sin razón social'}</div></div>
               </div>
               <div className="mt-3 text-xs text-slate-600">RFC {e.rfc || '—'} · {n} colaboradores · Nómina {e.periodicidadNomina.toLowerCase()}</div>
+              {e.regimenFiscal && <div className="mt-1 text-xs text-slate-600">Régimen {e.regimenFiscal}</div>}
               <div className="mt-1 text-xs text-slate-600">{e.departamentos.length} departamentos{e.firmanteNombre ? ` · Firma: ${e.firmanteNombre}` : ''}</div>
               <div className="mt-4 flex gap-2">
                 {e.id !== empresa.id && <button className="btn-secondary py-1.5" onClick={() => setEmpresa(e.id)}>Usar</button>}
@@ -106,13 +108,19 @@ function Respaldo() {
         <div className="flex flex-wrap gap-2">
           <button className="btn-primary" onClick={respaldar}><Download size={16} /> Descargar respaldo</button>
           <label className="btn-secondary cursor-pointer"><Upload size={16} /> Restaurar respaldo<input type="file" accept="application/json" className="hidden" onChange={(e) => restaurar(e.target.files?.[0])} /></label>
-          <button className="btn-secondary" onClick={() => confirmar('¿Cargar los datos de demostración? Se reemplazará TODA la información actual para todos los usuarios.') && reemplazarDB(crearDBDemo())}><RotateCcw size={16} /> Cargar datos de demostración</button>
           <button className="btn-ghost text-rose-600" onClick={() => confirmar('¿Borrar TODA la información y empezar desde cero? Descarga un respaldo antes.') && reemplazarDB(crearDBVacia())}><Trash2 size={16} /> Empezar desde cero</button>
         </div>
       </div>
     </Seccion>
   )
 }
+
+const REGIMENES = [
+  '601 - General de Ley Personas Morales', '603 - Personas Morales con Fines no Lucrativos', '605 - Sueldos y Salarios e Ingresos Asimilados a Salarios',
+  '606 - Arrendamiento', '612 - Personas Físicas con Actividades Empresariales y Profesionales', '620 - Sociedades Cooperativas de Producción',
+  '621 - Incorporación Fiscal', '622 - Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras', '623 - Opcional para Grupos de Sociedades',
+  '624 - Coordinados', '625 - Actividades Empresariales con ingresos a través de Plataformas Tecnológicas', '626 - Régimen Simplificado de Confianza',
+]
 
 function EmpresaForm({ e: inicial, onClose }: { e: Empresa; onClose: () => void }) {
   const { guardarItem, db, setEmpresa } = useStore()
@@ -131,11 +139,28 @@ function EmpresaForm({ e: inicial, onClose }: { e: Empresa; onClose: () => void 
     <Modal open onClose={onClose} title={esNueva ? 'Nueva empresa' : `Editar ${inicial.nombre}`} wide
       footer={<><button className="btn-secondary" onClick={onClose}>Cancelar</button><button form="form-emp" className="btn-primary">Guardar</button></>}>
       <form id="form-emp" onSubmit={submit} className="grid gap-3 sm:grid-cols-2">
+        <div className="flex flex-wrap items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
+          <LogoEmpresa empresa={e} size={84} className="shadow-sm" />
+          <div className="space-y-2">
+            <span className="label">Logotipo de la empresa</span>
+            <div className="flex flex-wrap gap-2">
+              <label className="btn-secondary cursor-pointer py-1.5"><ImagePlus size={16} /> {e.logo ? 'Cambiar logo' : 'Subir logo'}
+                <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" className="hidden" onChange={async (ev) => { const f = ev.target.files?.[0]; if (f) setE({ ...e, logo: await redimensionarLogo(f) }) }} />
+              </label>
+              {e.logo && <button type="button" className="btn-ghost py-1.5 text-rose-600" onClick={() => setE({ ...e, logo: undefined })}><Trash2 size={16} /> Quitar</button>}
+            </div>
+            <p className="text-xs text-slate-500">PNG, JPG, SVG o WEBP. Aparece en el encabezado al elegir la empresa y en constancias, contratos y recibos.</p>
+          </div>
+        </div>
         <Field label="Nombre comercial *"><Input required {...txt('nombre')} /></Field>
         <Field label="Razón social"><Input {...txt('razonSocial')} /></Field>
         <Field label="RFC"><Input maxLength={13} {...txt('rfc', true)} /></Field>
         <Field label="Registro patronal IMSS"><Input {...txt('registroPatronal', true)} /></Field>
-        <Field label="Domicilio fiscal" className="sm:col-span-2" hint="La ciudad (última parte) se usa como lugar de emisión de las constancias"><Input {...txt('direccion')} placeholder="Calle y número, Colonia, Ciudad, Estado" /></Field>
+        <Field label="Régimen fiscal"><Select {...txt('regimenFiscal')}><option value="">Selecciona…</option>{REGIMENES.map((r) => <option key={r}>{r}</option>)}</Select></Field>
+        <Field label="Inicio de operaciones"><Input type="date" {...txt('inicioOperaciones')} /></Field>
+        <Field label="Domicilio fiscal" className="sm:col-span-2" hint="La ciudad (última parte) se usa como lugar de emisión de las constancias"><Input {...txt('direccion')} placeholder="Calle y número, Colonia, C.P., Ciudad, Estado" /></Field>
+        <Field label="Código postal"><Input maxLength={5} {...txt('codigoPostal')} /></Field>
+        <Field label="Actividad económica"><Input {...txt('actividadEconomica')} /></Field>
         <Field label="Teléfono de RH"><Input {...txt('telefono')} /></Field>
         <div />
         <Field label="Firma de constancias (nombre)"><Input {...txt('firmanteNombre')} placeholder="Lic. Nombre Apellido" /></Field>

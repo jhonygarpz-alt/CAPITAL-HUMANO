@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { CalendarClock, Calculator, Download, Gift, Lock, Printer, RefreshCw, RotateCcw, Save, Scale, Settings2, Trash2, Users, Wallet } from 'lucide-react'
 import { useStore } from '../store/Store'
 import { Avatar, Badge, Empty, Field, Input, Modal, PageHeader, Seccion, Select, StatCard, Table, Tabs, confirmar } from '../components/ui'
+import { logoHtml } from '../lib/plantillas'
 import { CONFIG_AGUINALDO_LEY, calcularAguinaldo, colaboradoresConDerecho, configDe } from '../lib/aguinaldo'
 import { descargarCSV, diffDays, fmtFecha, fmtFechaLarga, fmtMoney, hoy, nombreCompleto, round2, uid } from '../lib/utils'
 import type { ConfigAguinaldo, DB, PeriodoAguinaldo, ReciboAguinaldo } from '../types'
@@ -263,7 +264,7 @@ function imprimirRecibos(p: PeriodoAguinaldo, recibos: ReciboAguinaldo[], db: DB
   const html = recibos.map((r) => {
     const c = db.colaboradores.find((x) => x.id === r.colaboradorId)
     if (!c) return ''
-    return `<section><header><div><b>${e.razonSocial || e.nombre}</b><br>RFC ${e.rfc} · Reg. Pat. ${e.registroPatronal}</div><div class="r"><b>RECIBO DE AGUINALDO ${p.anio}</b><br>Pago: ${fmtFecha(p.fechaPago)}</div></header>
+    return `<section><header><div style="display:flex;gap:12px;align-items:center">${logoHtml(e, 48)}<div><b>${e.razonSocial || e.nombre}</b><br>RFC ${e.rfc} · Reg. Pat. ${e.registroPatronal || '—'}</div></div><div class="r"><b>RECIBO DE AGUINALDO ${p.anio}</b><br>Pago: ${fmtFecha(p.fechaPago)}</div></header>
 <div class="emp"><div><b>${nombreCompleto(c)}</b><br>${c.numero} · ${c.puesto}</div><div>RFC ${c.rfc}<br>CURP ${c.curp}</div><div>Periodo ${fmtFecha(r.desde)} – ${fmtFecha(r.hasta)}<br>Días computables ${r.diasComputables}</div></div>
 <table><tr><th>Concepto</th><th class="r">Importe</th></tr>
 <tr><td>Aguinaldo: ${r.diasAguinaldo} días × ${fmtMoney(r.salarioBase)}</td><td class="r">${fmtMoney(r.importe)}</td></tr>
