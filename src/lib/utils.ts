@@ -232,3 +232,23 @@ export function importeEnLetra(monto: number) {
   const millonExacto = entero >= 1_000_000 && entero % 1_000_000 === 0
   return `${letras}${millonExacto ? ' DE' : ''} ${entero === 1 ? 'PESO' : 'PESOS'} ${String(centavos).padStart(2, '0')}/100 M.N.`
 }
+
+/** Reduce un logotipo a un máximo de `max` px conservando proporción y transparencia (PNG). Los SVG se guardan tal cual. */
+export async function redimensionarLogo(file: File, max = 320): Promise<string> {
+  if (file.type === 'image/svg+xml') return leerArchivo(file)
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.round(img.width * k)
+      canvas.height = Math.round(img.height * k)
+      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+      URL.revokeObjectURL(url)
+      resolve(canvas.toDataURL('image/png'))
+    }
+    img.onerror = reject
+    img.src = url
+  })
+}

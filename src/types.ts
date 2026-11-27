@@ -14,6 +14,13 @@ export interface Empresa {
   firmanteNombre?: string
   firmantePuesto?: string
   telefono?: string
+  /** Logotipo (dataURL PNG/SVG reducido) */
+  logo?: string
+  /** Datos de la Constancia de Situación Fiscal */
+  codigoPostal?: string
+  regimenFiscal?: string
+  inicioOperaciones?: string
+  actividadEconomica?: string
   /** Configuración predeterminada del cálculo de aguinaldo */
   configAguinaldo?: ConfigAguinaldo
   configPrima?: ConfigPrima

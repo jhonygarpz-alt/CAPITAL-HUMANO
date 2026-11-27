@@ -5,7 +5,7 @@ import {
 } from 'lucide-react'
 import { useStore } from '../store/Store'
 import { cx, Avatar } from './ui'
-import { Marca, LogoOptima } from './Marca'
+import { Marca, LogoOptima, LogoEmpresa } from './Marca'
 import { nombreCompleto, normalizar } from '../lib/utils'
 import { calcularAvisos, type TipoAviso } from '../lib/avisos'
 import { moduloDeRuta, MODULOS } from '../lib/permisos'
@@ -259,6 +259,7 @@ export default function Layout() {
           <span className="hidden h-10 w-px bg-white/30 lg:block" />
           <div className="flex items-center gap-2">
             <span className="hidden font-semibold lg:inline">Empresa:</span>
+            <LogoEmpresa empresa={empresa} size={40} className="hidden sm:inline-flex" />
             <select value={empresa.id} onChange={(e) => setEmpresa(e.target.value)} className="w-32 rounded-lg border-0 bg-white px-3 py-2 font-semibold text-primary-800 outline-none focus:ring-4 focus:ring-accent-500/40 sm:w-44">
               {db.empresas.map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
             </select>

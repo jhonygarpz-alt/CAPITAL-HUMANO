@@ -23,3 +23,20 @@ export function Marca({ size = 44, claro = true, subtitulo }: { size?: number; c
     </div>
   )
 }
+
+/** Logotipo de una empresa del sistema; si no tiene, muestra sus iniciales con su color. */
+export function LogoEmpresa({ empresa, size = 36, className = '' }: { empresa: { nombre: string; logo?: string; color?: string }; size?: number; className?: string }) {
+  if (empresa.logo) {
+    return (
+      <span className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white p-0.5 ring-1 ring-black/5 ${className}`} style={{ width: size, height: size }}>
+        <img src={empresa.logo} alt={`Logo de ${empresa.nombre}`} className="max-h-full max-w-full object-contain" />
+      </span>
+    )
+  }
+  const ini = empresa.nombre.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase()
+  return (
+    <span className={`inline-flex shrink-0 items-center justify-center rounded-lg font-bold text-white ${className}`} style={{ width: size, height: size, background: empresa.color || '#064467', fontSize: size * 0.38 }}>
+      {ini || '?'}
+    </span>
+  )
+}
